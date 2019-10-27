@@ -1,0 +1,82 @@
+openapi: 3.0.0
+info:
+  title: Reacts REST API
+  description: API documentation for the Reacts project. The HTTP method `TRACE` is used to document WebSocket, because Swagger does not support WebSocket.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000/api
+    description: REST API Server
+  - url: ws://localhost:3000/api
+    description: WebSocket API Server
+
+paths:
+  /session/:
+    post:
+      summary: Create a new session, given a YouTube URL, and admin username.
+      tags:
+        - REST
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                ytUrl:
+                  type: string
+                username:
+                  type: string
+            example:
+              ytUrl: "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+              username: "admin"
+
+      produces:
+        - application/json
+      responses:
+        "201":
+          description: URL path of created session
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+
+  /session/{url}:
+    get:
+      summary: Get information about a session
+      tags:
+        - REST
+      parameters:
+        - in: path
+          name: url
+          type: string
+          required: true
+      produces:
+        - application/json
+      responses:
+        "200":
+          description: Object of data about a session
+        "404":
+          description: When a session was not found for the given URL
+
+    trace:
+      summary: Connect to a session. Cannot be run in Swagger.
+      tags:
+        - WebSocket
+      parameters:
+        - in: path
+          name: url
+          required: true
+          schema:
+            type: string
+            example: 7a11316dda4fd018e44b0fffb969fd9aabf172ac
+        - in: query
+          name: username
+          required: true
+          schema:
+            type: string
+            example: admin
+      produces:
+        - application/json
