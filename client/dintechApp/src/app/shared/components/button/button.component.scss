@@ -1,0 +1,13 @@
+.button{
+    display: inline-block;
+    > button {
+        cursor: pointer;
+        outline: none;
+        background: #c0c1c2;
+        padding: .78571429em 1.5em .78571429em;
+        border-radius: .28571429rem;
+        box-shadow: none;
+        appearance: none;
+        border: none;
+    }
+}

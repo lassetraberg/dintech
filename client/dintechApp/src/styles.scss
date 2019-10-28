@@ -1,0 +1,49 @@
+@import "~@angular/cdk/overlay-prebuilt.css";
+
+/* You can add global styles to this file, and also import other style files */
+* {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    box-sizing: border-box;
+    color: #050304;
+    transition: all 255ms cubic-bezier(.25,.8,.25,1);
+}
+
+:root {
+    --bg-color: #F1EFF1;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+}
+
+input:active, input:focus{
+    outline: none;
+}
+
+/* Rules for sizing the icon. */
+.material-icons-outlined.md-18 { font-size: 18px; }
+.material-icons-outlined.md-24 { font-size: 24px; }
+.material-icons-outlined.md-28 { font-size: 28px; }
+.material-icons-outlined.md-36 { font-size: 36px; }
+.material-icons-outlined.md-48 { font-size: 48px; }
+
+/* Rules for using icons as black on a light background. */
+.material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+.material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+/* Rules for using icons as white on a dark background. */
+.material-icons.md-light { color: rgba(255, 255, 255, 1); }
+.material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+/* Forms. */
+.ng-valid[required], .ng-valid.required  {
+    border-left: 5px solid #42A948; /* green */
+  }
+  
+  .ng-invalid:not(form)  {
+    border-left: 5px solid #a94442; /* red */
+  }

@@ -1,0 +1,173 @@
+.newsession {
+    height: 100vh;
+    width: 90vh;
+    max-width: 350px;
+    background: rgb(60,58,60);
+    background: radial-gradient(circle, rgba(60,58,60,1) 0%, rgba(45,43,45,1) 100%);
+    border: 1px solid #222022;
+    color: white;
+    padding: 20px;
+    padding-top: 25px;
+    position: relative;
+
+    .newsession__header{
+        color: inherit;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;;
+        user-select: none;
+        margin-bottom: 25px;
+        > span {
+            font-size: 1.25rem;
+        }
+        > i {
+            cursor: pointer;
+            color: inherit;
+        }
+    }
+
+    form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        .form-group {
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 4px;
+            > * {
+                width: 100%,
+            }
+            > label {
+                color: #fff;
+                display: block;
+                font-weight: lighter;
+                font-size: 0.75rem;
+                padding-bottom: 5px;
+            }
+            > input, select {
+                color: #fff;
+                background: rgba(255,255,255,0.08);
+                outline: none;
+                border: 1px solid rgba(255,255,255, 0.1);
+                padding: 12px;
+                display: block;
+                border-radius: 4px;
+                &:focus{
+                    box-shadow: 0 0 0 2px #fff;
+                }
+            }
+            > input {
+                cursor: text;
+            }
+            > select {
+                cursor: pointer;
+            }
+            > div {
+                span {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    i {
+                        color: #FCE4EC;
+                        padding-right: 5px; 
+                    }
+                    color: #FCE4EC;
+                    font-weight: lighter;
+                    font-size: 0.675rem;
+                    padding-top: 5px;
+                }
+            }
+        }
+        > button {
+            cursor: pointer;
+            margin-top: 35px;
+            color: #000;
+            background: rgba(255,255,255,0.95);
+            outline: none;
+            border: 1px solid rgba(255,255,255, 0.1);
+            padding: 12px;
+            display: block;
+            border-radius: 4px;
+            &.disabled{
+                background: rgba(255,255,255,0.08);
+                opacity: 0.5;
+                cursor: not-allowed;
+            }
+
+        }
+    }
+
+    .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 68px;
+        top: 68px;
+    }
+
+}
+
+
+
+
+
+/* Loading Animation */
+.lds-ellipsis {
+    display: inline-block;
+    position: relative;
+    width: 64px;
+    height: 64px;
+  }
+  .lds-ellipsis div {
+    position: absolute;
+    top: 27px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: #fff;
+    animation-timing-function: cubic-bezier(0, 1, 1, 0);
+  }
+  .lds-ellipsis div:nth-child(1) {
+    left: 6px;
+    animation: lds-ellipsis1 0.6s infinite;
+  }
+  .lds-ellipsis div:nth-child(2) {
+    left: 6px;
+    animation: lds-ellipsis2 0.6s infinite;
+  }
+  .lds-ellipsis div:nth-child(3) {
+    left: 26px;
+    animation: lds-ellipsis2 0.6s infinite;
+  }
+  .lds-ellipsis div:nth-child(4) {
+    left: 45px;
+    animation: lds-ellipsis3 0.6s infinite;
+  }
+  @keyframes lds-ellipsis1 {
+    0% {
+      transform: scale(0);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  @keyframes lds-ellipsis3 {
+    0% {
+      transform: scale(1);
+    }
+    100% {
+      transform: scale(0);
+    }
+  }
+  @keyframes lds-ellipsis2 {
+    0% {
+      transform: translate(0, 0);
+    }
+    100% {
+      transform: translate(19px, 0);
+    }
+  }
+  

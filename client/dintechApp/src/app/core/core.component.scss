@@ -1,0 +1,40 @@
+:host{
+    // Local variables
+    min-height: 100vh;
+    margin: auto auto;
+    padding: 0;
+    display: grid;
+    grid-template-areas: "header"
+                        "main"
+                        "nav";
+    grid-template-rows: auto 1fr auto;
+
+    header {
+        grid-area: "header";
+    }
+
+    main {
+        z-index: 49;
+        height: 100vh;
+        grid-area: "main";
+        overflow-y: auto;
+        overflow-x: hidden;
+        background-color: #F1EFF1;
+    }
+
+    nav {
+        z-index: 99;
+        position: absolute;
+        bottom: 0;
+        left: 100px;
+        right: 100px;
+    }
+
+    // Absolute positioning for router outlet.
+    /deep/ router-outlet ~ * {
+        position: absolute;
+        width: calc(100vw - (2 * (34px)));
+        margin-left: 34px;
+        margin-right: 34px;
+    }
+}

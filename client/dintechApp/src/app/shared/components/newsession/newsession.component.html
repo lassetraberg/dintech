@@ -1,0 +1,49 @@
+<div class="newsession">
+  <div class="newsession__header">
+    Start new session
+    <i class="material-icons-outlined md-28" (click)="_close()"> close </i>
+  </div>
+
+  <div [hidden]="submitted">
+      
+      <form #sessionForm="ngForm" (ngSubmit)="onSubmit(sessionForm); sessionForm.reset();">    
+        
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" class="form-control" id="name" [(ngModel)]="model.name" name="name" #name="ngModel" required>
+        <div [hidden]="name.valid || name.pristine">
+          <span>
+            <i class="material-icons-outlined md-18">error_outline</i>
+            You have to enter a name.
+          </span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="link">YouTube Link</label>
+        <input type="text" class="form-control" id="link" [(ngModel)]="model.link" name="link" #link="ngModel" required>
+        <div [hidden]="link.valid || link.pristine">
+          <span>
+            <i class="material-icons-outlined md-18">error_outline</i>
+            You have to enter a valid YouTube link.
+          </span>
+        </div>
+      </div>
+      
+      <div class="form-group">
+        <label for="rights">Settings</label>
+        <select class="form-control" id="rights" required [(ngModel)]="model.rights" name="rights">
+          <option *ngFor="let right of rights" [value]="right">{{right}}</option>
+        </select>
+      </div>
+
+      <button type="submit" [ngClass]="{'disabled': !sessionForm.form.valid}" [disabled]="!sessionForm.form.valid" (click)="newSession();">Start session</button>
+      
+    </form>
+  </div>
+
+  <div [hidden]="!submitted" [ngClass]="{'loading': submitted}">
+      <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+  </div>
+  
+</div>
