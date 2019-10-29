@@ -8,6 +8,8 @@ import { NewsessionComponent } from './components/newsession/newsession.componen
 import { NewSessionService } from './services/newsession.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DataService } from './services/data.service';
+import { WebsocketService } from './services/websocket.service';
 
 @NgModule({
   declarations: [
@@ -23,7 +25,9 @@ import { FormsModule } from '@angular/forms';
   providers: [
       PlayPauseService,
       ChatService,
-      NewSessionService
+      NewSessionService,
+      DataService,
+      WebsocketService,
   ],
   exports: [
       ButtonComponent,
