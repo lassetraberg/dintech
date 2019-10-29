@@ -1,3 +1,20 @@
-<!--<iframe #iframe width="100%" src="https://www.youtube.com/embed/r5dHD8MpSpU?controls=0" frameborder="0" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+<div class="header">
+    <i routerLink="/" class="material-icons-outlined md-28"> home </i>
+ 
+    <i class="material-icons-outlined md-28"> share </i>
+  
+    <i class="material-icons-outlined md-28" (click)="openChat()"> chat </i>
+</div>
 
-<div id="yt-player"></div>
+<div class="player">
+    <div id="yt-player"></div>
+    <div class="player__overlay"></div>
+</div>
+
+<div class="timeline">
+    <div class="play-pause-button" (click)="playPause()">
+        <i  class="material-icons" [ngClass]="playing ? 'pause' : 'play'">
+        </i>
+    </div>
+
+</div>

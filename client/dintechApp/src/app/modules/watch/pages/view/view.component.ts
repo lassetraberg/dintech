@@ -1,6 +1,6 @@
-import { Component, OnInit, ViewChild, AfterViewInit, ElementRef, HostListener } from '@angular/core';
+import { Component, OnInit, AfterViewInit, } from '@angular/core';
 import { PlayPauseService } from 'src/app/shared/services/playpause.service';
-import { timer } from 'rxjs';
+import { ChatService } from 'src/app/shared/services/chat.service';
 
 @Component({
   selector: 'app-view',
@@ -11,15 +11,16 @@ export class ViewComponent implements OnInit, AfterViewInit {
 
   // Reference to YouTube Player.
   player: any;
-  
-  constructor(private playpause: PlayPauseService) { }
+  playing: boolean;
+
+  constructor(private playpause: PlayPauseService,  private chat : ChatService) { }
   
   ngOnInit() {
 
     // Initialise YouTube Player.
     (<any>window).onYouTubeIframeAPIReady = () => {
       this.player = new (<any>window).YT.Player('yt-player', {
-        height: window.innerHeight,
+        height: '100%',
         width: '100%',
         videoId: 'r5dHD8MpSpU',
         playerVars: {'autoplay': 0, 'rel': 0, 'controls': 0},
@@ -52,6 +53,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
   // The API calls this function when the video player is ready.
   onPlayerReady() {
     console.log("Player Ready");
+    //this.player.playVideo();
   }
 
   /**
@@ -65,6 +67,19 @@ export class ViewComponent implements OnInit, AfterViewInit {
    */ 
   onPlayerStateChange(event: any) {
     console.log(event);    
+  }
+
+  openChat() {
+    this.chat.open();
+  }
+
+  playPause() {
+    this.playing = !this.playing;
+    if(this.playing) {
+      this.player.playVideo();
+    } else {
+      this.player.pauseVideo();
+    }
   }
 
 }

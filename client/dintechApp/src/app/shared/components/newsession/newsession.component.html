@@ -1,4 +1,4 @@
-<div class="newsession">
+<div class="newsession" @slideIn>
   <div class="newsession__header">
     Start new session
     <i class="material-icons-outlined md-28" (click)="_close()"> close </i>
@@ -6,10 +6,10 @@
 
   <div [hidden]="submitted">
       
-      <form #sessionForm="ngForm" (ngSubmit)="onSubmit(sessionForm); sessionForm.reset();">    
+      <form #sessionForm="ngForm" (ngSubmit)="onSubmit(sessionForm); sessionForm.reset();" autocomplete="off">    
         
       <div class="form-group">
-        <label for="name">Name</label>
+        <label for="name">Your Name</label>
         <input type="text" class="form-control" id="name" [(ngModel)]="model.name" name="name" #name="ngModel" required>
         <div [hidden]="name.valid || name.pristine">
           <span>
@@ -21,7 +21,7 @@
 
       <div class="form-group">
         <label for="link">YouTube Link</label>
-        <input type="text" class="form-control" id="link" [(ngModel)]="model.link" name="link" #link="ngModel" required>
+        <input type="text" class="form-control" id="link" [(ngModel)]="model.link" name="link" #link="ngModel" required pattern="http(?:s?):\/\/(?:www\.)?youtu(?:be\.com\/watch\?v=|\.be\/)([\w\-\_]*)(&(amp;)?‌​[\w\?‌​=]*)?">
         <div [hidden]="link.valid || link.pristine">
           <span>
             <i class="material-icons-outlined md-18">error_outline</i>
@@ -31,9 +31,9 @@
       </div>
       
       <div class="form-group">
-        <label for="rights">Settings</label>
-        <select class="form-control" id="rights" required [(ngModel)]="model.rights" name="rights">
-          <option *ngFor="let right of rights" [value]="right">{{right}}</option>
+        <label for="adminOnly">Settings</label>
+        <select class="form-control" id="adminOnly" required [(ngModel)]="model.adminOnly" name="adminOnly">
+          <option *ngFor="let right of rights" ng-value="right.adminOnly" label="{{right.text}}">{{right.adminOnly}}</option>
         </select>
       </div>
 
