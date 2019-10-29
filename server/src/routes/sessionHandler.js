@@ -1,8 +1,6 @@
-const crypto = require("crypto");
 const commandSchemas = require("../schemas/commandSchemas");
 const Joi = require("@hapi/joi");
-const { wsSendError } = require("../util/helper");
-
+const { wsSendError, makeError, generateUrl } = require("../util/helper");
 /*
     Message types:
     - Command
@@ -21,19 +19,13 @@ const { wsSendError } = require("../util/helper");
 
 const sessions = {};
 
-const generateUrl = (ytUrl, username) => {
-  const sha = crypto.createHash("sha1");
-  sha.update(`${ytUrl}:${username}:${Date.now()}`);
-  const url = sha.digest("hex");
-  return url;
-};
-
 const wsHandler = (ws, req) => {
   const url = req.params.url;
   const session = sessions[url];
   const username = req.query.username;
 
   const wsRequest = { url, session, username, ws };
+
   wsOnConnection(wsRequest);
   ws.on("message", dataString => wsOnMessage({ ...wsRequest, dataString }));
   ws.on("close", () => wsOnClose(wsRequest));
@@ -82,17 +74,20 @@ const wsOnMessage = wsRequest => {
     const parsedJson = JSON.parse(dataString);
 
     const schema = commandSchemas[parsedJson.command];
-    if (schema) {
-      const { error, value } = schema.validate(parsedJson);
-      if (error) {
-        wsSendError(ws, "Invalid command");
-        console.error(error);
-      } else {
-        session.clients.forEach(client => client.ws.send(dataString));
-      }
-    } else {
-      wsSendError(ws, "Invalid command");
+
+    if (!schema) {
+      wsSendError(ws, `Invalid command: ${dataString}`);
+      return;
     }
+
+    const { error, value } = schema.validate(parsedJson);
+    if (error) {
+      wsSendError(ws, `Invalid command: ${error.toString()}`);
+      console.error(error);
+      return;
+    }
+
+    session.clients.forEach(client => client.ws.send(dataString));
   }
 };
 
@@ -120,10 +115,10 @@ const createSession = (req, res) => {
       admin: { username, ws: undefined },
       clients: [] // [{username, ws}]
     };
+    res.status(201).json({ url });
   } else {
-    //
+    res.status(400).json(makeError("Session already exists."));
   }
-  res.status(201).json({ url });
 };
 
 const getSessionInfo = (req, res) => {
@@ -136,8 +131,9 @@ const getSessionInfo = (req, res) => {
     const ytUrl = session.url;
 
     res.json({ usernames, totalClients, admin, url: ytUrl });
+  } else {
+    res.status(404).json(makeError("Session not found."));
   }
-  res.status(404);
 };
 
 const sessionHandler = {
