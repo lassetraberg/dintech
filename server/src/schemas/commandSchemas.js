@@ -1,4 +1,5 @@
 const Joi = require("@hapi/joi");
+const stateSchemas = require("./stateSchemas");
 
 const commandSchemas = {
   play: Joi.object({
@@ -27,7 +28,17 @@ const commandSchemas = {
     command: Joi.string()
       .pattern(/requestState/)
       .required()
-  })
+  }),
+
+  setState: Joi.object({
+    command: Joi.string()
+      .pattern(/setState/)
+      .required(),
+
+    state: stateSchemas.state
+  }),
+
+  ignoredByAdmin: ["setState"]
 };
 
 module.exports = commandSchemas;

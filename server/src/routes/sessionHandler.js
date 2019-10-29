@@ -1,6 +1,12 @@
-const commandSchemas = require("../schemas/commandSchemas");
 const Joi = require("@hapi/joi");
-const { wsSendError, makeError, generateUrl } = require("../util/helper");
+
+const commandSchemas = require("../schemas/commandSchemas");
+const {
+  wsSendError,
+  wsSendObj,
+  makeError,
+  generateUrl
+} = require("../util/helper");
 /*
     Message types:
     - Command
@@ -19,6 +25,17 @@ const { wsSendError, makeError, generateUrl } = require("../util/helper");
 
 const sessions = {};
 
+const getSessionInfoHelper = url => {
+  const session = sessions[url];
+  if (!session) return null;
+  return {
+    usernames: session.clients.map(client => client.username),
+    totalClients: session.clients.length,
+    admin: session.admin.username,
+    ytUrl: session.url
+  };
+};
+
 const wsHandler = (ws, req) => {
   const url = req.params.url;
   const session = sessions[url];
@@ -34,12 +51,18 @@ const wsHandler = (ws, req) => {
 const wsOnConnection = wsRequest => {
   const { url, session, ws, username } = wsRequest;
   if (!session) {
-    wsSendError(ws, "Session does not exists");
+    wsSendError(ws, "Session does not exists.");
+    ws.close();
+    return;
+  }
+  if (!username) {
+    wsSendError(ws, "You must specify a username.");
     ws.close();
     return;
   }
   if (session.clients.map(c => c.username).includes(username)) {
-    wsSendError(ws, "Name already in use");
+    wsSendError(ws, "Name already in use.");
+    ws.close();
     return;
   }
 
@@ -51,19 +74,10 @@ const wsOnConnection = wsRequest => {
   }
   console.log(joinMessage);
   sessions[url] = session;
-  ws.send(
-    JSON.stringify({
-      ytUrl: session.url,
-      usernames: session.clients.map(client => client.username)
-    })
-  );
+  wsSendObj(ws, getSessionInfoHelper(url));
 
   if (session.admin.ws !== ws) {
-    session.admin.ws.send(
-      JSON.stringify({
-        command: "requestState"
-      })
-    );
+    wsSendObj(session.admin.ws, { command: "requestState" });
   }
 };
 
@@ -87,7 +101,13 @@ const wsOnMessage = wsRequest => {
       return;
     }
 
-    session.clients.forEach(client => client.ws.send(dataString));
+    if (commandSchemas.ignoredByAdmin.includes(parsedJson.command)) {
+      session.clients
+        .filter(client => client.ws !== session.admin.ws)
+        .forEach(client => client.ws.send(dataString));
+    } else {
+      session.clients.forEach(client => client.ws.send(dataString));
+    }
   }
 };
 
@@ -98,42 +118,49 @@ const wsOnClose = wsRequest => {
     session.clients = session.clients.filter((val, i, arr) => {
       return val.ws !== ws;
     });
+    console.log("Client disconnected");
     if (session.clients.length === 0) {
       delete sessions[url];
+      console.log("Session deleted");
     }
   }
-  console.log("Client disconnected");
 };
 
 const createSession = (req, res) => {
   const ytUrl = req.body.ytUrl;
   const username = req.body.username;
   const url = generateUrl(ytUrl, username);
-  if (!sessions[url]) {
-    sessions[url] = {
-      url: ytUrl,
-      admin: { username, ws: undefined },
-      clients: [] // [{username, ws}]
-    };
-    res.status(201).json({ url });
-  } else {
+
+  if (sessions[url]) {
     res.status(400).json(makeError("Session already exists."));
+    return;
   }
+
+  sessions[url] = {
+    url: ytUrl,
+    admin: { username, ws: undefined },
+    clients: [] // [{username, ws}]
+  };
+
+  setTimeout(() => {
+    if (sessions[url] && sessions[url].clients.length === 0) {
+      delete sessions[url];
+      console.log("Session deleted");
+    }
+  }, 1000 * 60); // Deletes a session, if no one joins in 1 minute
+
+  res.status(201).json({ url });
 };
 
 const getSessionInfo = (req, res) => {
   const url = req.params.url;
-  const session = sessions[url];
-  if (session) {
-    const usernames = session.clients.map(client => client.username);
-    const totalClients = session.clients.length;
-    const admin = session.admin.username;
-    const ytUrl = session.url;
-
-    res.json({ usernames, totalClients, admin, url: ytUrl });
-  } else {
+  const sessionInfo = getSessionInfoHelper(url);
+  if (!sessionInfo) {
     res.status(404).json(makeError("Session not found."));
+    return;
   }
+
+  res.json(sessionInfo);
 };
 
 const sessionHandler = {
