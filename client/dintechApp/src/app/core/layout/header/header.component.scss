@@ -1,24 +1,2 @@
 header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 25px 34px;
-    background-color: var(--bg-color);
-
-    > i {
-        color: #050304;
-        user-select: none;
-        cursor: pointer;
-    }
-
-    .link{
-        > input {
-            padding: .78571429em 1.5em .78571429em;
-            border-radius: .28571429rem;
-            border: 1px solid #dbdbdb;
-            box-shadow: none;
-            margin-right: 10px;
-        }
-    }
 }

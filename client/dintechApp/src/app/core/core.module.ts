@@ -6,6 +6,8 @@ import { HeaderComponent } from './layout/header/header.component';
 import { SharedModule } from '../shared/shared.module';
 import { TimelineComponent } from './layout/timeline/timeline.component';
 import { FormsModule }   from '@angular/forms';
+import { BrowserAnimationsModule }   from '@angular/platform-browser/animations';
+
 
 @NgModule({
     declarations: [
@@ -18,6 +20,7 @@ import { FormsModule }   from '@angular/forms';
       CoreRoutingModule,
       SharedModule,
       FormsModule,
+      BrowserAnimationsModule
     ],
     providers: []
   })

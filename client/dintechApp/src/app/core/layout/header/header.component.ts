@@ -8,13 +8,8 @@ import { ChatService } from 'src/app/shared/services/chat.service';
 })
 export class HeaderComponent implements OnInit {
 
-  constructor(private chat : ChatService) { }
+  constructor() { }
 
   ngOnInit() {
   }
-
-  openChat() {
-    this.chat.open();
-  }
-
 }

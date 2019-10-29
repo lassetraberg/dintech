@@ -1,10 +1,22 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
-import { Form, FormGroup } from '@angular/forms';
+import { Form, FormGroup, FormControl } from '@angular/forms';
+import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-newsession',
   templateUrl: './newsession.component.html',
-  styleUrls: ['./newsession.component.scss']
+  styleUrls: ['./newsession.component.scss'],
+  animations: [
+    trigger('slideIn', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(100%)' }),
+        animate('200ms cubic-bezier(.25,.8,.25,1)', style({ opacity: 1, transform: 'translateX(0)' })),
+      ]),
+      transition(':leave', [
+        animate('200ms cubic-bezier(.25,.8,.25,1)', style({ opacity: 0 }))
+      ])
+    ]),
+  ]
 })
 export class NewsessionComponent implements OnInit {
 
@@ -12,14 +24,17 @@ export class NewsessionComponent implements OnInit {
   @Output() close: EventEmitter<void> = new EventEmitter();
 
   // Form
-  rights = ['Everyone can control', 'Only I can control'];
+  sessionForm: FormGroup;
+  rights: {adminOnly: boolean, text: string}[] = [
+    {"adminOnly": false, "text": 'Everyone can control'},
+    {"adminOnly": true, "text": 'Only I can control'},
+  ]
   submitted: boolean = false;
   model = new SessionData();
 
-  constructor() { }
+  constructor() {}
 
-  ngOnInit() {
-
+  ngOnInit() {    
   }
 
   _close(){
@@ -34,6 +49,8 @@ export class NewsessionComponent implements OnInit {
     this.submitted = true;
   }
 
+  get diagnostic() { return JSON.stringify(this.model)}
+
 }
 
 // Model for input validation
@@ -41,7 +58,7 @@ class SessionData {
   constructor(
     public link?: string,
     public name?: string,
-    public rights?: string,
+    public admimOnly?: boolean,
   ) {  }
 
 }
