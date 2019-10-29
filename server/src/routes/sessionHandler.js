@@ -20,16 +20,6 @@ const { wsSendError } = require("../util/helper");
     */
 
 const sessions = {};
-const allowedTypes = {
-  command: {
-    play: {},
-    pause: { offsetFromStart: -1 },
-    seekTo: { offsetFromStart: -1 }
-  },
-  state: {
-    paused: false
-  }
-};
 
 const generateUrl = (ytUrl, username) => {
   const sha = crypto.createHash("sha1");
