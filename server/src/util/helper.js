@@ -1,10 +1,9 @@
 const crypto = require("crypto");
 
 const helper = {
-  allowedStates: ["isPlaying", "offset"],
-
   wsSendError: (ws, errorMsg) =>
     helper.wsSendObj(ws, helper.makeError(errorMsg)),
+
   wsSendObj: (ws, obj) => ws.send(JSON.stringify(obj)),
 
   makeError: message => {
@@ -14,6 +13,7 @@ const helper = {
       }
     };
   },
+
   generateUrl: (ytUrl, username) => {
     const sha = crypto.createHash("sha1");
     sha.update(`${ytUrl}:${username}:${Date.now()}`);

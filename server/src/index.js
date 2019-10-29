@@ -25,5 +25,5 @@ app.get("/api/session/:url", sessionHandler.getSessionInfo);
 app.listen(port, () => console.log(`Listening on ${port}`));
 
 /*
-Node, Express, REST, WebSocket, Swagger
+Node, Express, REST, WebSocket, Swagger, hapi joi
 */

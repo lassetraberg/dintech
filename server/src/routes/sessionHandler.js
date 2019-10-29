@@ -12,13 +12,18 @@ const {
     - Command
       - play
       - pause
-        - params: offset
+        - offset: number
       - seekTo
-        - params: offset
+        - offset: number
       - requestState
+      - setState
+        - state:
+          - offset
+          - isPlaying
     - State
-      - Progress in seconds
-      - Paused/playing
+      - state:
+        - offset
+        - isPlaying
     - Error
       - Message
     */
@@ -115,9 +120,7 @@ const wsOnClose = wsRequest => {
   const { url, session, ws } = wsRequest;
 
   if (session) {
-    session.clients = session.clients.filter((val, i, arr) => {
-      return val.ws !== ws;
-    });
+    session.clients = session.clients.filter((val, i, arr) => val.ws !== ws);
     console.log("Client disconnected");
     if (session.clients.length === 0) {
       delete sessions[url];
