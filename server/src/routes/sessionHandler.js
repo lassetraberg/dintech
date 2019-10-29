@@ -67,7 +67,7 @@ const wsOnConnection = wsRequest => {
   }
 
   session.clients.push({ username, ws });
-  let joinMessage = "client connected";
+  let joinMessage = "Client connected";
   if (session.admin.username.toUpperCase() === username.toUpperCase()) {
     session.admin.ws = ws;
     joinMessage += " (admin)";
@@ -89,7 +89,7 @@ const wsOnMessage = wsRequest => {
 
     const schema = commandSchemas[parsedJson.command];
 
-    if (!schema) {
+    if (!schema || !Joi.isSchema(schema)) {
       wsSendError(ws, `Invalid command: ${dataString}`);
       return;
     }
