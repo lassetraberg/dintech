@@ -100,6 +100,7 @@ const wsOnClose = wsRequest => {
       delete sessions[url];
     }
   }
+  console.log("Client disconnected");
 };
 
 const createSession = (req, res) => {
@@ -115,7 +116,7 @@ const createSession = (req, res) => {
   } else {
     //
   }
-  res.send(url);
+  res.status(201).json({ url });
 };
 
 const getSessionInfo = (req, res) => {
