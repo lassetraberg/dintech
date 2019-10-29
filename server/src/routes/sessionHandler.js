@@ -35,13 +35,19 @@ const wsOnConnection = wsRequest => {
   const { url, session, ws, username } = wsRequest;
   if (session) {
     session.clients.push({ username, ws });
-    let callbackMessage = "client connected";
+    let joinMessage = "client connected";
     if (session.admin.username === username) {
       session.admin.ws = ws;
-      callbackMessage += " (admin)";
+      joinMessage += " (admin)";
     }
-    console.log(callbackMessage);
+    console.log(joinMessage);
     sessions[url] = session;
+    ws.send(
+      JSON.stringify({
+        ytUrl: session.url,
+        usernames: session.clients.map(client => client.username)
+      })
+    );
   }
 };
 
