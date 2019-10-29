@@ -1,4 +1,5 @@
 import { OnInit, Component } from '@angular/core';
+import { Router, NavigationStart } from '@angular/router';
 
 @Component({
     selector: 'app-core',
@@ -12,9 +13,15 @@ import { OnInit, Component } from '@angular/core';
     mobile: boolean;
     scrolled: boolean = false;
   
-    constructor() { }
+    constructor(private router: Router) { }
   
     ngOnInit() {
+      // Clear username on refresh.
+      this.router.events.subscribe((event) => {
+        if (event instanceof NavigationStart) {
+          window.sessionStorage.clear();
+        }
+      });
 
     }
   

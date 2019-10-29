@@ -1,6 +1,8 @@
 import { Component, OnInit, EventEmitter, Output, ViewChild } from '@angular/core';
 import { Form, FormGroup, FormControl } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { DataService } from '../../services/data.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-newsession',
@@ -32,7 +34,7 @@ export class NewsessionComponent implements OnInit {
   submitted: boolean = false;
   model = new SessionData();
 
-  constructor() {}
+  constructor(private dataService: DataService, private router: Router) {}
 
   ngOnInit() {    
   }
@@ -47,6 +49,11 @@ export class NewsessionComponent implements OnInit {
 
   onSubmit(form: Form) {
     this.submitted = true;
+    sessionStorage.setItem("username", this.model.name);
+    this.dataService.createSession(this.model.name, this.model.link).subscribe( (data) => {
+      this.router.navigate(['/watch/' + data.url]);
+      this._close();
+    })
   }
 
   get diagnostic() { return JSON.stringify(this.model)}
@@ -58,7 +65,7 @@ class SessionData {
   constructor(
     public link?: string,
     public name?: string,
-    public admimOnly?: boolean,
+    public adminOnly?: boolean,
   ) {  }
 
 }
