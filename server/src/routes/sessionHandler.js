@@ -65,7 +65,7 @@ const wsOnConnection = wsRequest => {
     ws.close();
     return;
   }
-  if (session.clients.map(c => c.username).includes(username)) {
+  if (session.clients.map(c => c.username.toUpperCase()).includes(username.toUpperCase())) {
     wsSendError(ws, "Name already in use.");
     ws.close();
     return;
