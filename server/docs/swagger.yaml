@@ -80,3 +80,25 @@ paths:
             example: admin
       produces:
         - application/json
+      responses:
+        "State":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                    enum: [true, false, progress]
+
+        "Commands":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  command:
+                    type: string
+                    enum: [play, pause, skipTo]

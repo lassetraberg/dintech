@@ -1,5 +1,23 @@
 const crypto = require("crypto");
-const WebSocket = require("ws");
+const commandSchemas = require("../schemas/commandSchemas");
+const Joi = require("@hapi/joi");
+const { wsSendError } = require("../util/helper");
+
+/*
+    Message types:
+    - Command
+      - play
+      - pause
+        - params: offset
+      - seekTo
+        - params: offset
+      - requestState
+    - State
+      - Progress in seconds
+      - Paused/playing
+    - Error
+      - Message
+    */
 
 const sessions = {};
 const allowedTypes = {
@@ -33,19 +51,35 @@ const wsHandler = (ws, req) => {
 
 const wsOnConnection = wsRequest => {
   const { url, session, ws, username } = wsRequest;
-  if (session) {
-    session.clients.push({ username, ws });
-    let joinMessage = "client connected";
-    if (session.admin.username === username) {
-      session.admin.ws = ws;
-      joinMessage += " (admin)";
-    }
-    console.log(joinMessage);
-    sessions[url] = session;
-    ws.send(
+  if (!session) {
+    wsSendError(ws, "Session does not exists");
+    ws.close();
+    return;
+  }
+  if (session.clients.map(c => c.username).includes(username)) {
+    wsSendError(ws, "Name already in use");
+    return;
+  }
+
+  session.clients.push({ username, ws });
+  let joinMessage = "client connected";
+  if (session.admin.username.toUpperCase() === username.toUpperCase()) {
+    session.admin.ws = ws;
+    joinMessage += " (admin)";
+  }
+  console.log(joinMessage);
+  sessions[url] = session;
+  ws.send(
+    JSON.stringify({
+      ytUrl: session.url,
+      usernames: session.clients.map(client => client.username)
+    })
+  );
+
+  if (session.admin.ws !== ws) {
+    session.admin.ws.send(
       JSON.stringify({
-        ytUrl: session.url,
-        usernames: session.clients.map(client => client.username)
+        command: "requestState"
       })
     );
   }
@@ -53,44 +87,21 @@ const wsOnConnection = wsRequest => {
 
 const wsOnMessage = wsRequest => {
   const { session, dataString, ws, username } = wsRequest;
-  /*
-    Message types:
-    - Command
-      - Play
-      - Pause
-      - Skip to XX seconds
-    - State
-      - Progress in seconds
-      - Paused/playing
-    */
-
-  console.log(sessions);
 
   if (session.admin.ws === ws) {
-    const data = JSON.parse(dataString);
-    if (Object.keys(allowedTypes.command).includes(data.command)) {
-      const command = allowedTypes.command[data.command];
-      if (
-        command === allowedTypes.command.pause ||
-        command === allowedTypes.command.seekTo
-      ) {
-        if (typeof data.offsetFromStart !== "number") {
-          console.log(
-            `Error: ${command} command: offsetFromStart argument not a number`
-          );
-          return;
-        }
+    const parsedJson = JSON.parse(dataString);
+
+    const schema = commandSchemas[parsedJson.command];
+    if (schema) {
+      const { error, value } = schema.validate(parsedJson);
+      if (error) {
+        wsSendError(ws, "Invalid command");
+        console.error(error);
+      } else {
+        session.clients.forEach(client => client.ws.send(dataString));
       }
-      session.clients.forEach(client => client.ws.send(dataString));
-    } else if (Object.keys(allowedTypes.state).includes(data.state)) {
-      const state = allowedTypes.state[data.state];
-      if (state === allowedTypes.state.paused) {
-        if (typeof data.param !== "boolean") {
-          console.log(`Error: ${state} command: param argument not a boolean`);
-          return;
-        }
-      }
-      session.clients.forEach(client => client.ws.send(dataString));
+    } else {
+      wsSendError(ws, "Invalid command");
     }
   }
 };
