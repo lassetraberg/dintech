@@ -90,18 +90,35 @@ paths:
       produces:
         - application/json
       responses:
-        "State":
+        "Play Command":
           description:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  state:
-                    type: string
-                    enum: [true, false, progress]
+                $ref: "#/components/schemas/PlayCommand"
 
-        "Commands":
+        "Pause Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PauseCommand"
+
+        "SeekTo Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeekToCommand"
+
+        "ReuqestState Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestStateCommand"
+
+        "setState Command":
           description:
           content:
             application/json:
@@ -110,4 +127,72 @@ paths:
                 properties:
                   command:
                     type: string
-                    enum: [play, pause, skipTo]
+                    enum: [setState]
+                  state:
+                    $ref: "#/components/schemas/State"
+
+        "Error":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    $ref: "#/components/schemas/Error"
+        "State":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    $ref: "#/components/schemas/State"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    State:
+      type: object
+      properties:
+        offset:
+          type: number
+        isPlaying:
+          type: boolean
+
+    PlayCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [play]
+
+    PauseCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [pause]
+        offset:
+          type: number
+
+    SeekToCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [seekTo]
+        offset:
+          type: number
+
+    RequestStateCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [requestState]
