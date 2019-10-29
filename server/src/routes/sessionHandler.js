@@ -6,7 +6,7 @@ const allowedTypes = {
   command: {
     play: {},
     pause: { offsetFromStart: -1 },
-    skipTo: { offsetFromStart: -1 }
+    seekTo: { offsetFromStart: -1 }
   },
   state: {
     paused: false
@@ -72,7 +72,7 @@ const wsOnMessage = wsRequest => {
       const command = allowedTypes.command[data.command];
       if (
         command === allowedTypes.command.pause ||
-        command === allowedTypes.command.skipTo
+        command === allowedTypes.command.seekTo
       ) {
         if (typeof data.offsetFromStart !== "number") {
           console.log(
