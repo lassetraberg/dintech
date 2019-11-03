@@ -1,6 +1,7 @@
 const Joi = require("@hapi/joi");
 
 const commandSchemas = require("../schemas/commandSchemas");
+const restSchemas = require("../schemas/restSchemas");
 const {
   wsSendError,
   wsSendObj,
@@ -65,7 +66,11 @@ const wsOnConnection = wsRequest => {
     ws.close();
     return;
   }
-  if (session.clients.map(c => c.username.toUpperCase()).includes(username.toUpperCase())) {
+  if (
+    session.clients
+      .map(c => c.username.toUpperCase())
+      .includes(username.toUpperCase())
+  ) {
     wsSendError(ws, "Name already in use.");
     ws.close();
     return;
@@ -130,8 +135,13 @@ const wsOnClose = wsRequest => {
 };
 
 const createSession = (req, res) => {
-  const ytUrl = req.body.ytUrl;
-  const username = req.body.username;
+  const { error, value } = restSchemas.createSession.validate(req.body);
+  if (error) {
+    res.status(400).json(makeError(error.toString()));
+    return;
+  }
+
+  const { ytUrl, username } = value;
   const url = generateUrl(ytUrl, username);
 
   if (sessions[url]) {

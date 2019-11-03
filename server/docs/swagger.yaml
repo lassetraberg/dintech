@@ -47,10 +47,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    type: string
+                $ref: "#/components/schemas/Error"
 
   /session/{url}:
     get:
@@ -67,8 +64,16 @@ paths:
       responses:
         "200":
           description: Object of data about a session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionInfo"
         "404":
           description: When a session was not found for the given URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
     trace:
       summary: Connect to a session. Cannot be run in Swagger.
@@ -136,10 +141,8 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  error:
-                    $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/Error"
+
         "State":
           description:
           content:
@@ -155,8 +158,11 @@ components:
     Error:
       type: object
       properties:
-        message:
-          type: string
+        error:
+          type: object
+          properties:
+            message:
+              type: string
     State:
       type: object
       properties:
@@ -164,6 +170,20 @@ components:
           type: number
         isPlaying:
           type: boolean
+
+    SessionInfo:
+      type: object
+      properties:
+        usernames:
+          type: array
+          items:
+            type: string
+        totalClients:
+          type: number
+        admin:
+          type: string
+        ytUrl:
+          type: string
 
     PlayCommand:
       type: object
