@@ -1,5 +1,6 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
+import { AuthGuard } from '../shared/guards/auth.guard';
 const routes: Routes = [
     {
         path: '',
@@ -7,8 +8,13 @@ const routes: Routes = [
     },
     {
         path: 'watch/:id',
-        loadChildren: "../modules/watch/watch.module#WatchModule"
-    }, 
+        loadChildren: "../modules/watch/watch.module#WatchModule",
+        canActivate: [AuthGuard]
+    },
+    {
+        path: 'auth',
+        loadChildren: "../modules/auth/auth.module#AuthModule"
+    },
     {
         path: '**',
         redirectTo: '',

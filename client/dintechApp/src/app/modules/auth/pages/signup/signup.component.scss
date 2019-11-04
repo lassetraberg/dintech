@@ -1,0 +1,121 @@
+.signup{
+    padding-top: 75px;
+
+    .title{
+        font-size: 2rem;
+        padding-bottom: 1rem;
+        display: block;
+    }
+
+    .subtitle{
+        font-size: 1.5rem;
+        padding-bottom: 1rem;
+        display: block;
+    }
+
+    form {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        .form-group {
+            width: 100%;
+            margin: 10px 0;
+            border-radius: 4px;
+            > * {
+                width: 100%,
+            }
+            > label {
+                display: block;
+                font-weight: lighter;
+                font-size: 0.75rem;
+                padding-bottom: 5px;
+            }
+            > input, select {
+                background: rgba(255,255,255,0);
+                outline: none;
+                border: 1px solid #050304;
+                padding: 12px;
+                display: block;
+                border-radius: 4px;
+                &:focus{
+                    box-shadow: 0 0 0 2px #050304;
+                }
+            }
+            > input {
+                cursor: text;
+            }
+            > select {
+                cursor: pointer;
+            }
+            > div {
+                span {
+                    display: flex;
+                    align-items: center;
+                    justify-content: flex-start;
+                    i {
+                        color: #050304;
+                        padding-right: 5px; 
+                    }
+                    color: #050304;
+                    font-weight: lighter;
+                    font-size: 0.675rem;
+                    padding-top: 5px;
+                }
+            }
+        }
+    }
+
+    > button {
+        cursor: pointer;
+        user-select: none;
+        appearance: none;
+        display: block;
+        background: none;
+        width: 100%;
+        padding: 36px 28px;
+        border-radius: 12px;
+        border: none;
+        box-shadow: none;
+        position: relative;
+        overflow: hidden;
+
+        &:first-of-type {
+            background: rgb(60,58,60);
+            background: radial-gradient(circle, rgba(60,58,60,1) 0%, rgba(45,43,45,1) 100%);
+            border: 1px solid #222022;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        &:nth-of-type(2) {
+            background: rgb(228,183,153);
+            background: radial-gradient(circle, rgba(228,183,153,1) 0%, rgba(219,166,134,1) 100%);
+            border: 1px solid #D3AD93;
+            color: rgba(0,0,0,.8);
+        }
+
+        &.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: scale(0.98);
+        }
+
+        &:not(.disabled){
+            &:hover {
+                transform: scale(1.02);
+            }
+            
+            &:active {
+                transform: scale(0.98);
+                opacity: 0.9;
+            }
+        }
+
+        &:active, &:focus{
+            outline: none;
+        }
+           
+    }
+
+
+}

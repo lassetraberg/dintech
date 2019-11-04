@@ -1,12 +1,11 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import { ViewComponent } from './pages/view/view.component';
+import { SignupComponent } from './pages/signup/signup.component';
 
 const routes: Routes = [
     {
         path: '',
-        component: ViewComponent,
-        data: {title: "Home"},
+        component: SignupComponent,
     }
 ];
 
@@ -14,4 +13,4 @@ const routes: Routes = [
     imports: [RouterModule.forChild(routes)],
     exports: [RouterModule]
   })
-  export class WatchRoutingModule { }
+  export class AuthRoutingModule { }

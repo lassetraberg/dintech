@@ -1,0 +1,31 @@
+<div class="newsession" @slideIn>
+  <div class="newsession__header">
+    Join session
+    <i class="material-icons-outlined md-28" (click)="_close()"> close </i>
+  </div>
+
+  <div [hidden]="submitted">
+      
+      <form #sessionForm="ngForm" (ngSubmit)="onSubmit(sessionForm); sessionForm.reset();" autocomplete="off">    
+        
+      <div class="form-group">
+        <label for="id">Session ID</label>
+        <input type="text" class="form-control" id="id" [(ngModel)]="model.id" name="id" #id="ngModel" required>
+        <div [hidden]="id.valid || id.pristine">
+          <span>
+            <i class="material-icons-outlined md-18">error_outline</i>
+            You have to enter an ID.
+          </span>
+        </div>
+      </div>
+
+      <button type="submit" [ngClass]="{'disabled': !sessionForm.form.valid}" [disabled]="!sessionForm.form.valid">Join session</button>
+      
+    </form>
+  </div>
+
+  <div [hidden]="!submitted" [ngClass]="{'loading': submitted}">
+      <div class="lds-ellipsis"><div></div><div></div><div></div><div></div></div>
+  </div>
+  
+</div>

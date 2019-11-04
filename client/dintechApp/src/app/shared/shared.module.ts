@@ -10,12 +10,16 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DataService } from './services/data.service';
 import { WebsocketService } from './services/websocket.service';
+import { AuthGuard } from './guards/auth.guard';
+import { JoinSessionService } from './services/joinsession.service';
+import { JoinsessionComponent } from './components/joinsession/joinession.component';
 
 @NgModule({
   declarations: [
     ButtonComponent,
     ChatComponent,
-    NewsessionComponent
+    NewsessionComponent,
+    JoinsessionComponent
   ],
   imports: [
     OverlayModule,  
@@ -26,8 +30,10 @@ import { WebsocketService } from './services/websocket.service';
       PlayPauseService,
       ChatService,
       NewSessionService,
+      JoinSessionService,
       DataService,
       WebsocketService,
+      AuthGuard
   ],
   exports: [
       ButtonComponent,
@@ -36,7 +42,8 @@ import { WebsocketService } from './services/websocket.service';
   ],
   entryComponents: [
     ChatComponent,
-    NewsessionComponent
+    NewsessionComponent,
+    JoinsessionComponent
   ]
 })
 export class SharedModule { }

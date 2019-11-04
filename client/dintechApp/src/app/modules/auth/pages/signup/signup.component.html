@@ -1,0 +1,23 @@
+<div class="signup">
+
+  <span class="title">You are about to join a YouTube session</span>
+  <span class="subtitle">Enter name to continue</span>
+
+  <form #signupForm="ngForm" (ngSubmit)="onSubmit(sessionForm); sessionForm.reset();" autocomplete="off">          
+    <div class="form-group">
+      <label for="name">Your Name</label>
+      <input type="text" class="form-control" id="name" [(ngModel)]="model.name" name="name" #name="ngModel" required>
+      <div [hidden]="name.valid || name.pristine">
+        <span>
+          <i class="material-icons-outlined md-18">error_outline</i>
+          You have to enter a name.
+        </span>
+      </div>
+    </div>
+  </form>
+  
+  <button [ngClass]="{'disabled': !signupForm.form.valid}" [disabled]="!signupForm.form.valid" (click)="submit()">
+    Join session
+  </button>
+  
+</div>

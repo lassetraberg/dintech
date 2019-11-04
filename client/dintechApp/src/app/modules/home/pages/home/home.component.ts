@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { NewSessionService } from 'src/app/shared/services/newsession.service';
+import { JoinSessionService } from 'src/app/shared/services/joinsession.service';
 
 @Component({
   selector: 'app-home',
@@ -8,7 +9,7 @@ import { NewSessionService } from 'src/app/shared/services/newsession.service';
 })
 export class HomeComponent implements OnInit {
 
-  constructor(private newSessionService: NewSessionService) { }
+  constructor(private newSessionService: NewSessionService, private joinSessionService: JoinSessionService) { }
 
   ngOnInit() {
   }
