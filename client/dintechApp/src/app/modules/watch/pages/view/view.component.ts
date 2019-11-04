@@ -1,9 +1,9 @@
-import { Component, OnInit, AfterViewInit, } from '@angular/core';
-import { PlayPauseService } from 'src/app/shared/services/playpause.service';
+import { Component, OnInit, AfterViewInit, ViewChild, AfterContentChecked, AfterViewChecked, ElementRef, } from '@angular/core';
 import { ChatService } from 'src/app/shared/services/chat.service';
 import { Router, ActivatedRoute } from '@angular/router';
 import { WebsocketService } from 'src/app/shared/services/websocket.service';
 import { WebSocketSubject } from 'rxjs/webSocket';
+import { timer, Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-view',
@@ -12,35 +12,35 @@ import { WebSocketSubject } from 'rxjs/webSocket';
 })
 export class ViewComponent implements OnInit, AfterViewInit {
 
-  // Reference to YouTube Player.
+  // Reference to YouTube Player
   player: any;
   playing: boolean;
   sessionId: string;
   ytUrl: string = null;
-
+  
+  // Timeline
+  currentTime : number;
+  @ViewChild('slider', {static: false}) slider: ElementRef;
+  subscription: Subscription;
 
   // Websockets
   private socket: WebSocketSubject<any>;
 
-  constructor(private playpause: PlayPauseService,  private chat : ChatService, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
+  constructor(private chat : ChatService, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
   
   ngOnInit() {
     this.sessionId = this.aRouter.snapshot.paramMap.get('id');
-    if(window.sessionStorage.getItem('username') == null){
-      // TODO: Make nice UI
-      var username = prompt('Enter a username');
-      if (username != null) {
-        window.sessionStorage.setItem('username', username);
-        this.subscribeToWebsockets();
-      }
-    } else {
-      this.subscribeToWebsockets();
-    }
-
-    // Subscribe to external (outside of this component) state changes.
-      this.playpause.state.subscribe({
-      next: (data) => console.log(data)
-    });
+    this.initialiseYt();
+    // if(window.sessionStorage.getItem('username') == null){
+    //   // TODO: Make nice UI
+    //   var username = prompt('Enter a username');
+    //   if (username != null) {
+    //     window.sessionStorage.setItem('username', username);
+    //     this.subscribeToWebsockets();
+    //   }
+    // } else {
+    //   this.subscribeToWebsockets();
+    // }
   }
   
   ngAfterViewInit(): void {
@@ -53,6 +53,11 @@ export class ViewComponent implements OnInit, AfterViewInit {
   }
 
   subscribeToWebsockets(){
+    // const actions = {
+    //   play: () => { playMethod() },
+    //   pause: () => { pauseMethod() },
+    //   seekTo: () => { this.seekTo() },
+    // }
      // Subscribe to WebSocket
      this.socket = this.ws.getSubject(this.sessionId, sessionStorage.getItem("username"));
      this.socket.subscribe(
@@ -83,7 +88,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
       this.player = new (<any>window).YT.Player('yt-player', {
         height: '100%',
         width: '100%',
-        videoId: this.ytUrl.split('\=')[1],
+        videoId: 'MrUhzYdcX6w'/*this.ytUrl.split('\=')[1]*/,
         playerVars: {'autoplay': 0, 'rel': 0, 'controls': 0},
         events: {
           'onReady': (data) => {
@@ -95,17 +100,15 @@ export class ViewComponent implements OnInit, AfterViewInit {
         }
       });
     };    
-    console.log("Done!");
   }
 
   // The API calls this function when the video player is ready.
   onPlayerReady() {
-    console.log("Player Ready");
-    //this.player.playVideo();
+  
   }
 
   /**
-   * The API calls this function when the video player is ready. 
+   * The API calls this function when the video player state changes. 
    * -1 - unstarted
    * 0 - ended
    * 1 - playing
@@ -114,8 +117,73 @@ export class ViewComponent implements OnInit, AfterViewInit {
    * 5 - video cued
    */ 
   onPlayerStateChange(event: any) {
-    console.log(event);    
+    // Clear subscription
+    if(this.subscription) this.subscription.unsubscribe();
+    const states = {
+      1: () => { this.syncTimeline() },
+    }
+    const state = states[event.data];
+    if (!state) return;
+    state();
   }
+
+  /**
+   * Invoke function to track video elapsed time.
+   * Pre-condition: Player has state '1'.
+   */
+  syncTimeline() {
+    if(this.slider) {
+      this.subscription = timer(0, 500).subscribe( () => {
+        // Get video status
+        const duration = this.player.getDuration();
+        const currentTime = this.player.getCurrentTime();
+        // Set input range properties to match video status
+        this.slider.nativeElement.max = duration;
+        this.slider.nativeElement.value = "" + currentTime;
+        // Make left side of input thumb darker (elapsed time)
+        const percentage = currentTime / duration * 100;
+        this.slider.nativeElement.style.background = 'linear-gradient(to right, rgb(60,58,60) 0%, rgb(60,58,60) '+ percentage +'%, rgb(228,183,153) ' + percentage + '%, rgb(228,183,153) 100%)';
+      });
+    }
+  }
+
+  /**
+   * Method to request seek to a given number of seconds.
+   * @param seconds elapsed time.
+   */
+  postSeekTo(seconds: number) {
+    this.socket.next({command: 'seekTo', seconds: seconds});
+  }
+  
+  /**
+   * Call methods to set player time.
+   * @param seconds elapsed time.
+   */
+  seekTo(seconds: number) {
+    if(this.player.playing) this.player.seekTo(seconds, true);
+    if(!this.player.playing) {
+      this.player.seekTo(seconds, true);
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   openChat() {
     this.chat.open();
@@ -124,10 +192,25 @@ export class ViewComponent implements OnInit, AfterViewInit {
   playPause() {
     this.playing = !this.playing;
     if(this.playing) {
-      this.socket.next({command: 'play'});
+      this.player.playVideo();
+      // this.socket.next({command: 'play'});
     } else {
-      this.socket.next({command: 'pause', offsetFromStart: this.player.getCurrentTime()});
+      this.player.pauseVideo();
+      //this.socket.next({command: 'pause', offsetFromStart: this.player.getCurrentTime()});
     }
   }
+
+
+
+
+
+
+}
+
+class YouTubeVideo {
+  constructor(
+    public currentTime?: number,
+    public duration?: number,
+  ) {  }
 
 }

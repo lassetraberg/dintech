@@ -6,6 +6,12 @@
     <i class="material-icons-outlined md-28" (click)="openChat()"> chat </i>
 </div>
 
+<div class="address-bar">
+    <div class="address-bar__inner">
+        <input type="text" value="https://www.youtube.com/watch?v=k7eMyQCqhdE">
+    </div>
+</div>
+
 <div class="player">
     <div id="yt-player"></div>
     <div class="player__overlay"></div>
@@ -16,5 +22,7 @@
         <i  class="material-icons" [ngClass]="playing ? 'pause' : 'play'">
         </i>
     </div>
-
+    <div class="time">
+        <input #slider type="range" min="0" value="0" class="timeslider" (change)="postSeekTo($event.target.value);"/>
+    </div>
 </div>

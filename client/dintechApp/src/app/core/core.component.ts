@@ -17,11 +17,8 @@ import { Router, NavigationStart } from '@angular/router';
   
     ngOnInit() {
       // Clear username on refresh.
-      this.router.events.subscribe((event) => {
-        if (event instanceof NavigationStart) {
-          window.sessionStorage.clear();
-        }
-      });
+      //window.sessionStorage.clear();
+ 
 
     }
   

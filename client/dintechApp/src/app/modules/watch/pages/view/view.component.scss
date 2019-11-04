@@ -16,13 +16,45 @@
     }
 }
 
-.player {
+.address-bar{
+    height: 45px;
+    width: 100%;
+    background: rgb(60,58,60);
+    background: radial-gradient(circle, rgba(60,58,60,1) 0%, rgba(45,43,45,1) 100%);
+    border: 1px solid #D3AD93;
+    border-bottom: 0;
     border-radius: 6px 6px 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+
+    .address-bar__inner{
+        flex-grow: 1;
+        height: 100%;
+        background: rgba(255,255,255,.14);
+        border-radius: 3px;
+        padding: 0 10px;
+        > input {
+            width: 100%;
+            font-weight: lighter;
+            appearance: none;
+            background: none;
+            outline: none;
+            border: none;
+            color: rgba(255,255,255,0.85);
+        }        
+    }
+}
+
+.player {
     overflow: hidden;
     width: 100%;
-    height: calc(100vh - 78px - 75px);
+    height: calc(100vh - 78px - 75px - 45px);
     position: relative;
     border: 1px solid #D3AD93;
+    border-bottom: none;
+    border-top: none;
     .player__overlay {
         position: absolute;
         z-index: 99;
@@ -40,6 +72,7 @@
     background: rgb(228,183,153);
     background: radial-gradient(circle, rgba(228,183,153,1) 0%, rgba(219,166,134,1) 100%);
     border: 1px solid #D3AD93;
+    border-top: none;
     border-radius: 6px;
     border-top-left-radius: 0;
     border-top-right-radius: 0;
@@ -69,6 +102,36 @@
                     font-family: 'Material Icons';
                     content: 'pause';
                 }
+            }
+        }
+    }
+
+    .time {
+        height: 100%;
+        flex-grow: 1;
+        background: rgba(0,0,0,.20);
+        position: relative;
+        padding: 0 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        .timeslider{
+            cursor: pointer;
+            width: 100%;
+            height: 4px;
+            appearance: none;
+            background: rgb(228,183,153);
+            outline: none;
+            border-radius: 9999px;
+            position: relative;
+            &::-webkit-slider-thumb{
+                appearance: none;
+                width: 15px;
+                height: 15px;
+                cursor: pointer;
+                background: rgb(228,183,153);
+                border: 4px solid rgb(60,58,60);
+                border-radius: 9999px;
             }
         }
     }
