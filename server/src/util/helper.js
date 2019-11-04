@@ -16,7 +16,7 @@ const helper = {
 
   generateUrl: (ytUrl, username) => {
     const sha = crypto.createHash("sha1");
-    sha.update(`${ytUrl}:${username}:${Date.now()}`);
+    sha.update(`${ytUrl}:${username}:${Date.now()}:${Math.random()}`);
     const url = sha.digest("hex");
     return url;
   }

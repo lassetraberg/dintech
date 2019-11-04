@@ -57,7 +57,7 @@ const wsHandler = (ws, req) => {
 const wsOnConnection = wsRequest => {
   const { url, session, ws, username } = wsRequest;
   if (!session) {
-    wsSendError(ws, "Session does not exists.");
+    wsSendError(ws, "Session does not exist.");
     ws.close();
     return;
   }
