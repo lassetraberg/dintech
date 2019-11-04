@@ -8,14 +8,14 @@ const app = express();
 const expressWs = require("express-ws")(app);
 const sessionHandler = require("./routes/sessionHandler");
 
-const swaggerRest = YAML.load("docs/swagger.yaml");
+const swagger = YAML.load("docs/swagger.yaml");
 const port = 3000;
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors());
 
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerRest));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swagger));
 
 app.ws("/api/session/:url", sessionHandler.wsHandler);
 
@@ -25,5 +25,5 @@ app.get("/api/session/:url", sessionHandler.getSessionInfo);
 app.listen(port, () => console.log(`Listening on ${port}`));
 
 /*
-Node, Express, REST, WebSocket, Swagger
+Node, Express, REST, WebSocket, Swagger, hapi joi
 */

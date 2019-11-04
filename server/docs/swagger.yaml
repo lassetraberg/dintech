@@ -42,6 +42,12 @@ paths:
                 properties:
                   url:
                     type: string
+        "400":
+          description: Session already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /session/{url}:
     get:
@@ -58,8 +64,16 @@ paths:
       responses:
         "200":
           description: Object of data about a session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionInfo"
         "404":
           description: When a session was not found for the given URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
     trace:
       summary: Connect to a session. Cannot be run in Swagger.
@@ -80,3 +94,125 @@ paths:
             example: admin
       produces:
         - application/json
+      responses:
+        "Play Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlayCommand"
+
+        "Pause Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PauseCommand"
+
+        "SeekTo Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SeekToCommand"
+
+        "ReuqestState Command":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RequestStateCommand"
+
+        "setState Command":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  command:
+                    type: string
+                    enum: [setState]
+                  state:
+                    $ref: "#/components/schemas/State"
+
+        "Error":
+          description:
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+        "State":
+          description:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    $ref: "#/components/schemas/State"
+
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+    State:
+      type: object
+      properties:
+        offset:
+          type: number
+        isPlaying:
+          type: boolean
+
+    SessionInfo:
+      type: object
+      properties:
+        usernames:
+          type: array
+          items:
+            type: string
+        totalClients:
+          type: number
+        admin:
+          type: string
+        ytUrl:
+          type: string
+
+    PlayCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [play]
+
+    PauseCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [pause]
+        offset:
+          type: number
+
+    SeekToCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [seekTo]
+        offset:
+          type: number
+
+    RequestStateCommand:
+      type: object
+      properties:
+        command:
+          type: string
+          enum: [requestState]
