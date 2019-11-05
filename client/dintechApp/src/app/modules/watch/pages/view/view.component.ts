@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterViewInit, ViewChild, AfterContentChecked, AfterViewChecked, ElementRef, } from '@angular/core';
 import { ChatService } from 'src/app/shared/services/chat.service';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import { WebsocketService } from 'src/app/shared/services/websocket.service';
 import { WebSocketSubject } from 'rxjs/webSocket';
 import { timer, Observable, Subscription } from 'rxjs';
@@ -17,6 +17,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
   playing: boolean;
   sessionId: string;
   ytUrl: string = null;
+  usernames: string[] = null;
   
   // Timeline
   currentTime : number;
@@ -26,21 +27,11 @@ export class ViewComponent implements OnInit, AfterViewInit {
   // Websockets
   private socket: WebSocketSubject<any>;
 
-  constructor(private chat : ChatService, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
+  constructor(private chat : ChatService, private router: Router, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
   
   ngOnInit() {
     this.sessionId = this.aRouter.snapshot.paramMap.get('id');
-    this.initialiseYt();
-    // if(window.sessionStorage.getItem('username') == null){
-    //   // TODO: Make nice UI
-    //   var username = prompt('Enter a username');
-    //   if (username != null) {
-    //     window.sessionStorage.setItem('username', username);
-    //     this.subscribeToWebsockets();
-    //   }
-    // } else {
-    //   this.subscribeToWebsockets();
-    // }
+    this.subscribeToWebsockets();
   }
   
   ngAfterViewInit(): void {
@@ -53,33 +44,45 @@ export class ViewComponent implements OnInit, AfterViewInit {
   }
 
   subscribeToWebsockets(){
-    // const actions = {
-    //   play: () => { playMethod() },
-    //   pause: () => { pauseMethod() },
-    //   seekTo: () => { this.seekTo() },
-    // }
+    const actions = {
+      play: () => { this.player.playVideo() },
+      // pause: () => { pauseMethod() },
+      // seekTo: () => { this.seekTo() },
+    }
+    const errors = {
+      'NO_SESSION': () => { this.errorMethod() },
+      'NO_USERNAME': () => { this.errorMethod() },
+      'USERNAME_IN_USE': () => { this.errorMethod() },
+      'INVALID_COMMAND': () => { this.errorMethod() },
+    }
+    
      // Subscribe to WebSocket
      this.socket = this.ws.getSubject(this.sessionId, sessionStorage.getItem("username"));
      this.socket.subscribe(
        message => {
-         console.log(message);
-         if(this.ytUrl == null){
-           this.ytUrl = message.ytUrl;
-           this.initialiseYt();
-         }
-         if(message.command) {
-           if(message.command == 'play') {
-             this.player.playVideo();
-           }
-           if(message.command == 'pause') {
-             this.player.pauseVideo();
-             this.player.seekTo(message.offsetFromStart, true);
-           } 
-         }
+        if(message.error) {
+          console.log(message);
+          const error = errors[message.error.errorCode];
+          if (!error) return;
+          error();
+
+        } else if (this.ytUrl == null){
+          this.ytUrl = message.ytUrl;
+          this.usernames = message.usernames;
+          this.initialiseYt();
+        } else {
+          const state = actions[message.data];
+          if (!state) return;
+          state(); 
+        }
        },
        error => console.log(error),
        () => console.log('complete')
      );
+  }
+
+  errorMethod() {
+    console.log("Error method");
   }
 
   initialiseYt(){
@@ -88,7 +91,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
       this.player = new (<any>window).YT.Player('yt-player', {
         height: '100%',
         width: '100%',
-        videoId: 'MrUhzYdcX6w'/*this.ytUrl.split('\=')[1]*/,
+        videoId: this.ytUrl.split('\=')[1],
         playerVars: {'autoplay': 0, 'rel': 0, 'controls': 0},
         events: {
           'onReady': (data) => {

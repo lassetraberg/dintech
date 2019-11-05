@@ -27,10 +27,6 @@ export class NewsessionComponent implements OnInit {
 
   // Form
   sessionForm: FormGroup;
-  rights: {adminOnly: boolean, text: string}[] = [
-    {"adminOnly": false, "text": 'Everyone can control'},
-    {"adminOnly": true, "text": 'Only I can control'},
-  ]
   submitted: boolean = false;
   model = new SessionData();
 
@@ -65,7 +61,6 @@ class SessionData {
   constructor(
     public link?: string,
     public name?: string,
-    public adminOnly?: boolean,
   ) {  }
 
 }
