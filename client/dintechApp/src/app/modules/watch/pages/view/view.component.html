@@ -1,14 +1,14 @@
 <div class="header">
     <i routerLink="/" class="material-icons-outlined md-28"> home </i>
- 
+
     <i class="material-icons-outlined md-28"> share </i>
-  
+
     <i class="material-icons-outlined md-28" (click)="openChat()"> chat </i>
 </div>
 
 <div class="address-bar">
     <div class="address-bar__inner">
-        <input type="text" value="https://www.youtube.com/watch?v=k7eMyQCqhdE">
+        <input type="text" value="{{ytUrl}}" disabled>
     </div>
 </div>
 
@@ -19,10 +19,10 @@
 
 <div class="timeline">
     <div class="play-pause-button" (click)="playPause();">
-        <i  class="material-icons" [ngClass]="playing ? 'pause' : 'play'">
+        <i class="material-icons" [ngClass]="playing ? 'pause' : 'play'">
         </i>
     </div>
     <div class="time">
-        <input #slider type="range" min="0" value="0" class="timeslider" (change)="postSeekTo($event.target.value);"/>
+        <input #slider type="range" min="0" value="0" class="timeslider" (change)="postSeekTo($event.target.value);" />
     </div>
 </div>
