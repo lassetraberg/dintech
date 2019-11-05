@@ -6,10 +6,11 @@ const helper = {
 
   wsSendObj: (ws, obj) => ws.send(JSON.stringify(obj)),
 
-  makeError: message => {
+  makeError: (message, errorCode) => {
     return {
       error: {
-        message
+        message,
+        errorCode
       }
     };
   },
