@@ -257,8 +257,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
 
   setState(arg) {
     if (this.player) {
-      this.player.pauseVideo();
-      const { offset, isPlaying } = arg;
+      const { offset, isPlaying } = arg.state;
       if (Math.floor(offset) > 0) this.player.seekTo(offset, true);
       if (isPlaying) this.player.playVideo();
       else this.player.pauseVideo();
