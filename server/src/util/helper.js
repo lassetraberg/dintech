@@ -1,8 +1,8 @@
 const crypto = require("crypto");
 
 const helper = {
-  wsSendError: (ws, errorMsg) =>
-    helper.wsSendObj(ws, helper.makeError(errorMsg)),
+  wsSendError: (ws, errorMsg, errorCode) =>
+    helper.wsSendObj(ws, helper.makeError(errorMsg, errorCode)),
 
   wsSendObj: (ws, obj) => ws.send(JSON.stringify(obj)),
 
