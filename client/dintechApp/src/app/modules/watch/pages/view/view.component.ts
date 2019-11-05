@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, AfterContentChecked, AfterViewChecked, ElementRef, } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, AfterContentChecked, AfterViewChecked, ElementRef, ChangeDetectorRef, } from '@angular/core';
 import { ChatService } from 'src/app/shared/services/chat.service';
 import { Router, ActivatedRoute, RouterStateSnapshot } from '@angular/router';
 import { WebsocketService } from 'src/app/shared/services/websocket.service';
@@ -14,10 +14,13 @@ export class ViewComponent implements OnInit, AfterViewInit {
 
   // Reference to YouTube Player
   player: any;
-  playing: boolean;
+  playing: boolean = false;
   sessionId: string;
   ytUrl: string = null;
   usernames: string[] = null;
+
+  // Commands
+  lateJoinState: any;
   
   // Timeline
   currentTime : number;
@@ -27,7 +30,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
   // Websockets
   private socket: WebSocketSubject<any>;
 
-  constructor(private chat : ChatService, private router: Router, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
+  constructor(private cdr: ChangeDetectorRef, private chat : ChatService, private router: Router, private aRouter: ActivatedRoute, private ws: WebsocketService) { }
   
   ngOnInit() {
     this.sessionId = this.aRouter.snapshot.paramMap.get('id');
@@ -45,9 +48,11 @@ export class ViewComponent implements OnInit, AfterViewInit {
 
   subscribeToWebsockets(){
     const actions = {
-      play: () => { this.player.playVideo() },
-      // pause: () => { pauseMethod() },
-      // seekTo: () => { this.seekTo() },
+      play: (arg) => { this.play() },
+      pause: (arg) => { this.pause(arg) },
+      seekTo: (arg) => { this.seekTo(arg) },
+      requestState: (arg) => { this.requestState(arg) },
+      setState: (arg) => { this.setState(arg) },
     }
     const errors = {
       'NO_SESSION': () => { this.errorMethod() },
@@ -60,20 +65,19 @@ export class ViewComponent implements OnInit, AfterViewInit {
      this.socket = this.ws.getSubject(this.sessionId, sessionStorage.getItem("username"));
      this.socket.subscribe(
        message => {
+         console.log(message);
         if(message.error) {
-          console.log(message);
           const error = errors[message.error.errorCode];
           if (!error) return;
           error();
-
         } else if (this.ytUrl == null){
           this.ytUrl = message.ytUrl;
           this.usernames = message.usernames;
           this.initialiseYt();
         } else {
-          const state = actions[message.data];
+          const state = actions[message.command];
           if (!state) return;
-          state(); 
+          state(message); 
         }
        },
        error => console.log(error),
@@ -107,7 +111,14 @@ export class ViewComponent implements OnInit, AfterViewInit {
 
   // The API calls this function when the video player is ready.
   onPlayerReady() {
-  
+    if (this.lateJoinState) {
+      this.player.pauseVideo();
+      const {offset, isPlaying} = this.lateJoinState;
+      if (Math.floor(offset) > 0) this.player.seekTo(offset, true);
+      if (isPlaying) this.player.playVideo();
+      else this.player.pauseVideo();
+      this.lateJoinState = null; 
+    }
   }
 
   /**
@@ -121,13 +132,48 @@ export class ViewComponent implements OnInit, AfterViewInit {
    */ 
   onPlayerStateChange(event: any) {
     // Clear subscription
+    console.log(event.data);
     if(this.subscription) this.subscription.unsubscribe();
     const states = {
-      1: () => { this.syncTimeline() },
+      '-1': () => {
+        this.playing = false;
+      },
+      0: () => {
+        this.playing = false;
+      },
+      1: () => {
+        this.syncTimeline()
+        this.playing = true;
+      },
+      2: () => {
+        this.playing = false;
+      },
+      3: () => {
+        this.playing = false;
+      },
+      5: () => {
+        this.playing = false;
+      }
+      
+
     }
     const state = states[event.data];
     if (!state) return;
     state();
+    this.cdr.markForCheck();
+    this.cdr.detectChanges();
+  }
+
+  play() {
+    this.player.playVideo();
+  }
+
+  playPause() {
+    if(!this.playing) {
+      this.socket.next({command: 'play'});
+    } else {
+      this.socket.next({command: 'pause', offset: this.player.getCurrentTime()});
+    }
   }
 
   /**
@@ -150,24 +196,44 @@ export class ViewComponent implements OnInit, AfterViewInit {
     }
   }
 
+  pause(arg) {
+    const offset = arg.offset;
+    this.player.pauseVideo();
+    this.player.seekTo(offset);
+  }
+
+  seekTo(arg) {
+    const {offset} = arg;
+    this.player.seekTo(offset, true); 
+  }
+
+  requestState(arg) {
+    const offset = this.player.getCurrentTime();
+    const isPlaying = this.playing;
+    this.socket.next({command: 'setState', state: {isPlaying, offset}});
+  }
+
+  setState(arg) {
+    if (this.player) {
+      this.player.pauseVideo();
+      const {offset, isPlaying} = arg;
+      if (Math.floor(offset) > 0) this.player.seekTo(offset, true);
+      if (isPlaying) this.player.playVideo();
+      else this.player.pauseVideo();
+    } else {
+      this.lateJoinState = arg;
+    }
+  }
+
   /**
    * Method to request seek to a given number of seconds.
    * @param seconds elapsed time.
    */
   postSeekTo(seconds: number) {
-    this.socket.next({command: 'seekTo', seconds: seconds});
+    this.socket.next({command: 'seekTo', offset: seconds});
   }
   
-  /**
-   * Call methods to set player time.
-   * @param seconds elapsed time.
-   */
-  seekTo(seconds: number) {
-    if(this.player.playing) this.player.seekTo(seconds, true);
-    if(!this.player.playing) {
-      this.player.seekTo(seconds, true);
-    }
-  }
+
 
 
 
@@ -191,19 +257,6 @@ export class ViewComponent implements OnInit, AfterViewInit {
   openChat() {
     this.chat.open();
   }
-
-  playPause() {
-    this.playing = !this.playing;
-    if(this.playing) {
-      this.player.playVideo();
-      // this.socket.next({command: 'play'});
-    } else {
-      this.player.pauseVideo();
-      //this.socket.next({command: 'pause', offsetFromStart: this.player.getCurrentTime()});
-    }
-  }
-
-
 
 
 
