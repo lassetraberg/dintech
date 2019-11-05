@@ -46,8 +46,14 @@ export class ViewComponent implements OnInit, AfterViewInit {
   subscribeToWebsockets(){
     const actions = {
       play: () => { this.player.playVideo() },
-      pause: () => { pauseMethod() },
-      seekTo: () => { this.seekTo() },
+      // pause: () => { pauseMethod() },
+      // seekTo: () => { this.seekTo() },
+    }
+    const errors = {
+      'NO_SESSION': () => { this.errorMethod() },
+      'NO_USERNAME': () => { this.errorMethod() },
+      'USERNAME_IN_USE': () => { this.errorMethod() },
+      'INVALID_COMMAND': () => { this.errorMethod() },
     }
     
      // Subscribe to WebSocket
@@ -55,7 +61,11 @@ export class ViewComponent implements OnInit, AfterViewInit {
      this.socket.subscribe(
        message => {
         if(message.error) {
-         
+          console.log(message);
+          const error = errors[message.error.errorCode];
+          if (!error) return;
+          error();
+
         } else if (this.ytUrl == null){
           this.ytUrl = message.ytUrl;
           this.usernames = message.usernames;
@@ -69,6 +79,10 @@ export class ViewComponent implements OnInit, AfterViewInit {
        error => console.log(error),
        () => console.log('complete')
      );
+  }
+
+  errorMethod() {
+    console.log("Error method");
   }
 
   initialiseYt(){
