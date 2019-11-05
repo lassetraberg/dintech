@@ -57,12 +57,12 @@ const wsHandler = (ws, req) => {
 const wsOnConnection = wsRequest => {
   const { url, session, ws, username } = wsRequest;
   if (!session) {
-    wsSendError(ws, "Session does not exist.");
+    wsSendError(ws, "Session does not exist.", "NO_SESSION");
     ws.close();
     return;
   }
   if (!username) {
-    wsSendError(ws, "You must specify a username.");
+    wsSendError(ws, "You must specify a username.", "NO_USERNAME");
     ws.close();
     return;
   }
@@ -71,7 +71,7 @@ const wsOnConnection = wsRequest => {
       .map(c => c.username.toUpperCase())
       .includes(username.toUpperCase())
   ) {
-    wsSendError(ws, "Name already in use.");
+    wsSendError(ws, "Name already in use.", "USERNAME_IN_USE");
     ws.close();
     return;
   }
@@ -100,13 +100,17 @@ const wsOnMessage = wsRequest => {
     const schema = commandSchemas[parsedJson.command];
 
     if (!schema || !Joi.isSchema(schema)) {
-      wsSendError(ws, `Invalid command: ${dataString}`);
+      wsSendError(ws, `Invalid command: ${dataString}`, "INVALID_COMMAND");
       return;
     }
 
     const { error, value } = schema.validate(parsedJson);
     if (error) {
-      wsSendError(ws, `Invalid command: ${error.toString()}`);
+      wsSendError(
+        ws,
+        `Invalid command: ${error.toString()}`,
+        "INVALID_COMMAND"
+      );
       console.error(error);
       return;
     }
