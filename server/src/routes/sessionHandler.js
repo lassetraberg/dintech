@@ -1,18 +1,14 @@
 const Joi = require("@hapi/joi");
-const redis = require("async-redis");
 
-const rClient = redis.createClient({
-  host: "127.0.0.1",
-  port: 6379
-});
-
+const redis = require("../util/redis");
 const commandSchemas = require("../schemas/commandSchemas");
 const restSchemas = require("../schemas/restSchemas");
 const {
   wsSendError,
   wsSendObj,
   makeError,
-  generateUrl
+  generateUrl,
+  getSessionInfoHelper
 } = require("../util/helper");
 /*
     Message types:
@@ -37,22 +33,9 @@ const {
 
 // const sessions = {};
 
-const getSessionInfoHelper = url => {
-  const session = rClient.get(url);
-  // const session = sessions[url]; 
-  if (!session) return null;
-
-  return {
-    usernames: session.clients.map(client => client.username),
-    totalClients: session.clients.length,
-    admin: session.admin.username,
-    ytUrl: session.url
-  };
-};
-
 const wsHandler = async (ws, req) => {
   const url = req.params.url;
-  const session = await rClient.get(url);
+  const session = await redis.get(url);
   // const session = sessions[url]; 
   const username = req.query.username;
 
@@ -63,7 +46,7 @@ const wsHandler = async (ws, req) => {
   ws.on("close", () => wsOnClose(wsRequest));
 };
 
-const wsOnConnection = wsRequest => {
+const wsOnConnection = async (wsRequest) => {
   const { url, session, ws, username } = wsRequest;
   if (!session) {
     wsSendError(ws, "Session does not exist.", "NO_SESSION");
@@ -92,7 +75,7 @@ const wsOnConnection = wsRequest => {
     joinMessage += " (admin)";
   }
   console.log(joinMessage);
-  rClient.set(url, JSON.stringify(session));
+  await redis.set(url, session);
   // sessions[url] = session;
   wsSendObj(ws, getSessionInfoHelper(url));
 
@@ -101,7 +84,7 @@ const wsOnConnection = wsRequest => {
   }
 };
 
-const wsOnMessage = wsRequest => {
+const wsOnMessage = async (wsRequest) => {
   const { session, dataString, ws, username } = wsRequest;
 
   if (session.admin.ws === ws) {
@@ -135,14 +118,15 @@ const wsOnMessage = wsRequest => {
   }
 };
 
-const wsOnClose = async wsRequest => {
+const wsOnClose = async (wsRequest) => {
   const { url, session, ws } = wsRequest;
 
   if (session) {
     session.clients = session.clients.filter((val, i, arr) => val.ws !== ws);
     console.log("Client disconnected");
+
     if (session.clients.length === 0) {
-      const deleted = await rClient.del(url);
+      const deleted = await redis.del(url);
 
       if (deleted) {
         console.log("Session deleted");
@@ -166,9 +150,7 @@ const createSession = async (req, res) => {
   const { ytUrl, username } = value;
   const url = generateUrl(ytUrl, username);
 
-
-  const session = await rClient.get(url);
-  console.log(session)
+  const session = await redis.get(url);
 
   if (session) {
     res.status(400).json(makeError("Session already exists."));
@@ -181,7 +163,7 @@ const createSession = async (req, res) => {
     clients: [] // [{username, ws}]
   };
 
-  rClient.set(url, JSON.stringify(newSession));
+  redis.set(url, newSession);
 
   // sessions[url] = {
   //   url: ytUrl,
@@ -190,32 +172,29 @@ const createSession = async (req, res) => {
   // };
 
   setTimeout(async () => {
-    let session = await rClient.get(url);
+    const session = await redis.get(url);
 
-    if (session) {
-      session = JSON.parse(session);
+    if (session && session.clients.length === 0) {
+      const deleted = await redis.del(url);
 
-      if (session.clients.length === 0) {
-        const deleted = await rClient.del(url);
-
-        if (deleted) {
-          console.log("Session deleted");
-        } else {
-          console.log("Session not deleted");
-        }
+      if (deleted) {
+        console.log("Session deleted");
+      } else {
+        console.log("Session not deleted");
       }
-
-      // delete sessions[url];
-      // console.log("Session deleted");
     }
-  }, 1000 * 60); // Deletes a session, if no one joins in 1 minute
+
+    // delete sessions[url];
+    // console.log("Session deleted");
+  }, 1000 * 5); // Deletes a session, if no one joins in 1 minute
 
   res.status(201).json({ url });
 };
 
-const getSessionInfo = (req, res) => {
+const getSessionInfo = async (req, res) => {
   const url = req.params.url;
-  const sessionInfo = getSessionInfoHelper(url);
+
+  const sessionInfo = await getSessionInfoHelper(url);
   if (!sessionInfo) {
     res.status(404).json(makeError("Session not found."));
     return;
