@@ -1,4 +1,10 @@
 const Joi = require("@hapi/joi");
+const redis = require("async-redis");
+
+const rClient = redis.createClient({
+  host: "127.0.0.1",
+  port: 6379
+});
 
 const commandSchemas = require("../schemas/commandSchemas");
 const restSchemas = require("../schemas/restSchemas");
@@ -29,11 +35,13 @@ const {
       - Message
     */
 
-const sessions = {};
+// const sessions = {};
 
 const getSessionInfoHelper = url => {
-  const session = sessions[url];
+  const session = rClient.get(url);
+  // const session = sessions[url]; 
   if (!session) return null;
+
   return {
     usernames: session.clients.map(client => client.username),
     totalClients: session.clients.length,
@@ -42,9 +50,10 @@ const getSessionInfoHelper = url => {
   };
 };
 
-const wsHandler = (ws, req) => {
+const wsHandler = async (ws, req) => {
   const url = req.params.url;
-  const session = sessions[url];
+  const session = await rClient.get(url);
+  // const session = sessions[url]; 
   const username = req.query.username;
 
   const wsRequest = { url, session, username, ws };
@@ -83,7 +92,8 @@ const wsOnConnection = wsRequest => {
     joinMessage += " (admin)";
   }
   console.log(joinMessage);
-  sessions[url] = session;
+  rClient.set(url, JSON.stringify(session));
+  // sessions[url] = session;
   wsSendObj(ws, getSessionInfoHelper(url));
 
   if (session.admin.ws !== ws) {
@@ -125,20 +135,28 @@ const wsOnMessage = wsRequest => {
   }
 };
 
-const wsOnClose = wsRequest => {
+const wsOnClose = async wsRequest => {
   const { url, session, ws } = wsRequest;
 
   if (session) {
     session.clients = session.clients.filter((val, i, arr) => val.ws !== ws);
     console.log("Client disconnected");
     if (session.clients.length === 0) {
-      delete sessions[url];
-      console.log("Session deleted");
+      const deleted = await rClient.del(url);
+
+      if (deleted) {
+        console.log("Session deleted");
+      } else {
+        console.log("Session not deleted");
+      }
+
+      // delete sessions[url];
+      // console.log("Session deleted");
     }
   }
 };
 
-const createSession = (req, res) => {
+const createSession = async (req, res) => {
   const { error, value } = restSchemas.createSession.validate(req.body);
   if (error) {
     res.status(400).json(makeError(error.toString()));
@@ -148,21 +166,47 @@ const createSession = (req, res) => {
   const { ytUrl, username } = value;
   const url = generateUrl(ytUrl, username);
 
-  if (sessions[url]) {
+
+  const session = await rClient.get(url);
+  console.log(session)
+
+  if (session) {
     res.status(400).json(makeError("Session already exists."));
     return;
   }
 
-  sessions[url] = {
+  const newSession = {
     url: ytUrl,
     admin: { username, ws: undefined },
     clients: [] // [{username, ws}]
   };
 
-  setTimeout(() => {
-    if (sessions[url] && sessions[url].clients.length === 0) {
-      delete sessions[url];
-      console.log("Session deleted");
+  rClient.set(url, JSON.stringify(newSession));
+
+  // sessions[url] = {
+  //   url: ytUrl,
+  //   admin: { username, ws: undefined },
+  //   clients: [] // [{username, ws}]
+  // };
+
+  setTimeout(async () => {
+    let session = await rClient.get(url);
+
+    if (session) {
+      session = JSON.parse(session);
+
+      if (session.clients.length === 0) {
+        const deleted = await rClient.del(url);
+
+        if (deleted) {
+          console.log("Session deleted");
+        } else {
+          console.log("Session not deleted");
+        }
+      }
+
+      // delete sessions[url];
+      // console.log("Session deleted");
     }
   }, 1000 * 60); // Deletes a session, if no one joins in 1 minute
 
