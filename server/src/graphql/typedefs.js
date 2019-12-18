@@ -10,11 +10,10 @@ const typedefs = gql`
 
 	type Query {
 		getSession(url: String!): Session
-		getSessions: [Session!]!
 	}
 
 	type Mutation {
-		_: Boolean
+		createSession(ytUrl: String!, username: String!): String
 	}
 `
 

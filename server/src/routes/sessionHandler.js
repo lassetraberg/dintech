@@ -8,7 +8,8 @@ const {
   wsSendObj,
   makeError,
   generateUrl,
-  getSessionInfoHelper
+  getSessionInfoHelper,
+  createNewSession
 } = require("../util/helper");
 /*
     Message types:
@@ -148,47 +149,13 @@ const createSession = async (req, res) => {
   }
 
   const { ytUrl, username } = value;
-  const url = generateUrl(ytUrl, username);
+  const data = createNewSession(ytUrl, username);
 
-  const session = await redis.get(url);
-
-  if (session) {
+  if (data) {
     res.status(400).json(makeError("Session already exists."));
-    return;
+  } else {
+    res.status(201).json({ url: data.url });
   }
-
-  const newSession = {
-    url: ytUrl,
-    admin: { username, ws: undefined },
-    clients: [] // [{username, ws}]
-  };
-
-  redis.set(url, newSession);
-
-  // sessions[url] = {
-  //   url: ytUrl,
-  //   admin: { username, ws: undefined },
-  //   clients: [] // [{username, ws}]
-  // };
-
-  setTimeout(async () => {
-    const session = await redis.get(url);
-
-    if (session && session.clients.length === 0) {
-      const deleted = await redis.del(url);
-
-      if (deleted) {
-        console.log("Session deleted");
-      } else {
-        console.log("Session not deleted");
-      }
-    }
-
-    // delete sessions[url];
-    // console.log("Session deleted");
-  }, 1000 * 5); // Deletes a session, if no one joins in 1 minute
-
-  res.status(201).json({ url });
 };
 
 const getSessionInfo = async (req, res) => {

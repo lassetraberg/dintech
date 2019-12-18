@@ -12,7 +12,7 @@ const schema = require("./graphql");
 const graphqlServer = new ApolloServer(schema);
 
 const swagger = YAML.load("docs/swagger.yaml");
-const port = 3000;
+const port = process.env.PORT || 3000;
 
 graphqlServer.applyMiddleware({ app });
 

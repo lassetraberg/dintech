@@ -4,7 +4,8 @@
   "description": "",
   "main": "src/index.js",
   "scripts": {
-    "start": "nodemon src/index.js -e json,mjs,js,yaml",
+    "start": "PORT=3000 nodemon src/index.js -e json,mjs,js,yaml",
+    "start1": "PORT=3001 nodemon src/index.js -e json,mjs,js,yaml",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

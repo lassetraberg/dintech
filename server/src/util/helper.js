@@ -35,9 +35,44 @@ const helper = {
       admin: session.admin.username,
       ytUrl: session.url
     }
+  },
+
+  createNewSession: async (ytUrl, username) => {
+    const url = helper.generateUrl(ytUrl, username);
+
+    const session = await redis.get(url);
+
+    if (session) {
+      return null;
+    }
+
+    const newSession = {
+      url: ytUrl,
+      admin: { username, ws: undefined },
+      clients: [] // [{username, ws}]
+    };
+
+    redis.set(url, newSession);
+
+    setTimeout(async () => {
+      const session = await redis.get(url);
+
+      if (session && session.clients.length === 0) {
+        const deleted = await redis.del(url);
+
+        if (deleted) {
+          console.log("Session " + url + " deleted");
+        } else {
+          console.log("Session " + url + " not deleted");
+        }
+      }
+    }, 1000 * 60); // Deletes a session, if no one joins in 1 minute
+
+    return {
+      url,
+      session: newSession
+    };
   }
 };
-
-
 
 module.exports = helper;
