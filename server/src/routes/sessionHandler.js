@@ -35,6 +35,8 @@ const sockets = {};
 const wsHandler = (ws, req) => {
   const url = req.params.url;
   const username = req.query.username;
+  //username = (Math.random()*1000000).toString();
+  console.log(username);
 
   redis.client.get(url, (err, session) => {
     session = JSON.parse(session);
@@ -98,11 +100,9 @@ const wsOnConnection = wsRequest => {
 
 
 redis.subscriber.subscribe("message");
-
 redis.subscriber.on("message", (channel, message) => {
   const { url, dataString, ws, username } = JSON.parse(message);
-
-  if (sockets[url]){
+  if (sockets[url]) {
     redis.client.get(url, (err, session) => {
       session = JSON.parse(session);
       const myClients = sockets[url].filter(client => session.clients.map(c => c.username).includes(client.username));
@@ -114,7 +114,6 @@ redis.subscriber.on("message", (channel, message) => {
       } else {
         myClients.forEach(client => client.ws.send(dataString));
       }
-
     });
   }
 });
@@ -122,8 +121,6 @@ redis.subscriber.on("message", (channel, message) => {
 
 const wsOnMessage = wsRequest => {
   const { url, session, dataString, ws, username } = wsRequest;
-  //const adminWs = sockets[url].filter(client => client.username === session.admin.username)[0].ws;
-
   // If the client communicating is admin react to the command
   if (session.admin.username == username) {
 
@@ -187,29 +184,21 @@ const createSession = (req, res) => {
 
   // If the hashed url already exists, return
   redis.client.get(url, (err, session) => {
-
     if (session) {
       res.status(400).json(makeError("Session already exists."));
       return;
     }
-
     // Else define new session
     const newSession = {
       url: ytUrl,
       admin: { username },
       clients: []
     }
-
-    
-    
     // Add new session to shared memory with url as key
     redis.client.set(url, JSON.stringify(newSession));
-
     // Return 201: The request as been fulfilled and a new url is created.
     res.status(201).json({ url });
-
   });
-
 };
 
 const getSessionInfo = (req, res) => {
