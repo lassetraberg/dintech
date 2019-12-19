@@ -22,7 +22,6 @@ export class DataService {
         `${environment.restapi}/session`,
         {username, ytUrl},
         httpOptions
-      )
+      );
   }
-
 }

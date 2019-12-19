@@ -4,8 +4,8 @@
 
 export const environment = {
   production: false,
-  restapi: 'http://localhost:3000/api',
-  ws: 'ws://localhost:3000/api',
+  restapi: 'http://localhost:8080/api',
+  ws: 'ws://localhost:8080/api',
 };
 
 /*

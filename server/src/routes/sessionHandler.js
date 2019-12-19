@@ -1,5 +1,5 @@
 const Joi = require("@hapi/joi");
-
+const redis = require("../util/redis");
 const commandSchemas = require("../schemas/commandSchemas");
 const restSchemas = require("../schemas/restSchemas");
 const {
@@ -29,29 +29,20 @@ const {
       - Message
     */
 
-const sessions = {};
+const sockets = {};
 
-const getSessionInfoHelper = url => {
-  const session = sessions[url];
-  if (!session) return null;
-  return {
-    usernames: session.clients.map(client => client.username),
-    totalClients: session.clients.length,
-    admin: session.admin.username,
-    ytUrl: session.url
-  };
-};
 
 const wsHandler = (ws, req) => {
   const url = req.params.url;
-  const session = sessions[url];
   const username = req.query.username;
 
-  const wsRequest = { url, session, username, ws };
-
-  wsOnConnection(wsRequest);
-  ws.on("message", dataString => wsOnMessage({ ...wsRequest, dataString }));
-  ws.on("close", () => wsOnClose(wsRequest));
+  redis.client.get(url, (err, session) => {
+    session = JSON.parse(session);
+    const wsRequest = { url, session, username, ws };
+    wsOnConnection(wsRequest);
+    ws.on("message", dataString => wsOnMessage({ ...wsRequest, dataString }));
+    ws.on("close", () => wsOnClose(wsRequest));
+  })
 };
 
 const wsOnConnection = wsRequest => {
@@ -76,27 +67,68 @@ const wsOnConnection = wsRequest => {
     return;
   }
 
-  session.clients.push({ username, ws });
+  if (!sockets[url]) sockets[url] = [];
+  session.clients.push({ username });
+  const client = {username, ws};
+  sockets[url].push(client);
   let joinMessage = "Client connected";
   if (session.admin.username.toUpperCase() === username.toUpperCase()) {
-    session.admin.ws = ws;
+    session.admin.username = username;
     joinMessage += " (admin)";
   }
   console.log(joinMessage);
-  sessions[url] = session;
-  wsSendObj(ws, getSessionInfoHelper(url));
+  redis.client.set(url, JSON.stringify(session));
+  redis.client.get(url, (err, session) => {
+    session = JSON.parse(session);
+    if (!session) return null;
+    const sessionInfoHelper = {
+      usernames: session.clients.map(client => client.username),
+      totalClients: session.clients.length,
+      admin: session.admin.username,
+      ytUrl: session.url
+    };
+    wsSendObj(ws, sessionInfoHelper);
+  })
 
-  if (session.admin.ws !== ws) {
-    wsSendObj(session.admin.ws, { command: "requestState" });
+  if (session.admin.username !== username) {
+    const adminWs = sockets[url].filter(w => w.username === session.admin.username).ws;
+    if (adminWs) wsSendObj(adminWs, { command: "requestState" });
   }
 };
 
+
+redis.subscriber.subscribe("message");
+
+redis.subscriber.on("message", (channel, message) => {
+  const { url, dataString, ws, username } = JSON.parse(message);
+
+  if (sockets[url]){
+    redis.client.get(url, (err, session) => {
+      session = JSON.parse(session);
+      const myClients = sockets[url].filter(client => session.clients.map(c => c.username).includes(client.username));
+      const parsedJson = JSON.parse(dataString);
+      if (commandSchemas.ignoredByAdmin.includes(parsedJson.command)) {
+        myClients
+          .filter(client => client.username !== session.admin.username)
+          .forEach(client => client.ws.send(dataString));
+      } else {
+        myClients.forEach(client => client.ws.send(dataString));
+      }
+
+    });
+  }
+});
+
+
 const wsOnMessage = wsRequest => {
-  const { session, dataString, ws, username } = wsRequest;
+  const { url, session, dataString, ws, username } = wsRequest;
+  //const adminWs = sockets[url].filter(client => client.username === session.admin.username)[0].ws;
 
-  if (session.admin.ws === ws) {
+  // If the client communicating is admin react to the command
+  if (session.admin.username == username) {
+
+    // Data validation
     const parsedJson = JSON.parse(dataString);
-
     const schema = commandSchemas[parsedJson.command];
 
     if (!schema || !Joi.isSchema(schema)) {
@@ -115,69 +147,90 @@ const wsOnMessage = wsRequest => {
       return;
     }
 
-    if (commandSchemas.ignoredByAdmin.includes(parsedJson.command)) {
-      session.clients
-        .filter(client => client.ws !== session.admin.ws)
-        .forEach(client => client.ws.send(dataString));
-    } else {
-      session.clients.forEach(client => client.ws.send(dataString));
-    }
+    // The COMMAND passed validation. Broadcast it!
+    redis.publisher.publish("message", JSON.stringify(wsRequest));
   }
 };
 
 const wsOnClose = wsRequest => {
-  const { url, session, ws } = wsRequest;
-
+  const { url, session, username, ws } = wsRequest;
   if (session) {
-    session.clients = session.clients.filter((val, i, arr) => val.ws !== ws);
+    const userToDelete = sockets[url].indexOf(client => client.ws == ws);
+    sockets[url].splice(userToDelete,1);
+
+    session.clients = session.clients.filter((val, i, arr) => val.username !== username);
+    redis.client.set(url, JSON.stringify(session));
+
     console.log("Client disconnected");
     if (session.clients.length === 0) {
-      delete sessions[url];
-      console.log("Session deleted");
+      if (redis.client.del(url)) console.log("Session deleted");
+      delete sockets[url]; 
     }
   }
 };
 
+/**
+ * Method to create a new session.
+ */
 const createSession = (req, res) => {
+  // Validate request body
   const { error, value } = restSchemas.createSession.validate(req.body);
   if (error) {
     res.status(400).json(makeError(error.toString()));
     return;
   }
 
+  // Retrieve ytUrl and username
   const { ytUrl, username } = value;
+  // Generate hashed url
   const url = generateUrl(ytUrl, username);
 
-  if (sessions[url]) {
-    res.status(400).json(makeError("Session already exists."));
-    return;
-  }
+  // If the hashed url already exists, return
+  redis.client.get(url, (err, session) => {
 
-  sessions[url] = {
-    url: ytUrl,
-    admin: { username, ws: undefined },
-    clients: [] // [{username, ws}]
-  };
-
-  setTimeout(() => {
-    if (sessions[url] && sessions[url].clients.length === 0) {
-      delete sessions[url];
-      console.log("Session deleted");
+    if (session) {
+      res.status(400).json(makeError("Session already exists."));
+      return;
     }
-  }, 1000 * 60); // Deletes a session, if no one joins in 1 minute
 
-  res.status(201).json({ url });
+    // Else define new session
+    const newSession = {
+      url: ytUrl,
+      admin: { username },
+      clients: []
+    }
+
+    
+    
+    // Add new session to shared memory with url as key
+    redis.client.set(url, JSON.stringify(newSession));
+
+    // Return 201: The request as been fulfilled and a new url is created.
+    res.status(201).json({ url });
+
+  });
+
 };
 
 const getSessionInfo = (req, res) => {
-  const url = req.params.url;
-  const sessionInfo = getSessionInfoHelper(url);
-  if (!sessionInfo) {
-    res.status(404).json(makeError("Session not found."));
-    return;
-  }
+  const url = req.params.url;  
+  redis.client.get(url, (err, session) => {
+    session = JSON.parse(session);
+    if (!session) return null;
+    const sessionInfo = {
+      usernames: session.clients.map(client => client.username),
+      totalClients: session.clients.length,
+      admin: session.admin.username,
+      ytUrl: session.url
+    };
 
-  res.json(sessionInfo);
+    if (!sessionInfo) {
+      res.status(404).json(makeError("Session not found."));
+      return;
+    }
+  
+    res.json(sessionInfo);
+  })
 };
 
 const sessionHandler = {

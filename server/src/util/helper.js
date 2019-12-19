@@ -4,7 +4,9 @@ const helper = {
   wsSendError: (ws, errorMsg, errorCode) =>
     helper.wsSendObj(ws, helper.makeError(errorMsg, errorCode)),
 
-  wsSendObj: (ws, obj) => ws.send(JSON.stringify(obj)),
+  wsSendObj: (ws, obj) => {
+    ws.send(JSON.stringify(obj));
+  },
 
   makeError: (message, errorCode) => {
     return {
@@ -15,6 +17,9 @@ const helper = {
     };
   },
 
+  /**
+   * Method to generate url by hashing
+   */
   generateUrl: (ytUrl, username) => {
     const sha = crypto.createHash("sha1");
     sha.update(`${ytUrl}:${username}:${Date.now()}:${Math.random()}`);

@@ -100,6 +100,7 @@ export class ViewComponent implements OnInit, AfterViewInit {
     );
     this.socket.subscribe(
       message => {
+        console.log(message);
         if (message.error) {
           const error = errors[message.error.errorCode];
           if (!error) return;
