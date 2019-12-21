@@ -1,0 +1,11 @@
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\LoadTester.exe.config
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\LoadTester.exe
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\LoadTester.pdb
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\Newtonsoft.Json.dll
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\websocket-sharp.dll
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\Newtonsoft.Json.xml
+C:\Git\dintech\loadtest\LoadTester\LoadTester\bin\Debug\websocket-sharp.xml
+C:\Git\dintech\loadtest\LoadTester\LoadTester\obj\Debug\LoadTester.csprojAssemblyReference.cache
+C:\Git\dintech\loadtest\LoadTester\LoadTester\obj\Debug\LoadTester.csproj.CopyComplete
+C:\Git\dintech\loadtest\LoadTester\LoadTester\obj\Debug\LoadTester.exe
+C:\Git\dintech\loadtest\LoadTester\LoadTester\obj\Debug\LoadTester.pdb

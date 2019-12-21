@@ -35,7 +35,6 @@ const sockets = {};
 const wsHandler = (ws, req) => {
   const url = req.params.url;
   const username = req.query.username;
-  //username = (Math.random()*1000000).toString();
   console.log(username);
 
   redis.client.get(url, (err, session) => {
@@ -110,9 +109,15 @@ redis.subscriber.on("message", (channel, message) => {
       if (commandSchemas.ignoredByAdmin.includes(parsedJson.command)) {
         myClients
           .filter(client => client.username !== session.admin.username)
-          .forEach(client => client.ws.send(dataString));
+          .forEach(client => {
+            client.ws.send(dataString);
+            console.log(`Sent "${dataString} to client ${client.username}`);
+          });
       } else {
-        myClients.forEach(client => client.ws.send(dataString));
+        myClients.forEach(client => {
+          client.ws.send(dataString)
+          console.log(`Sent "${dataString} to client ${client.username}`);
+        });
       }
     });
   }

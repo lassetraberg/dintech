@@ -18,15 +18,27 @@ services:
     depends_on:
       - redis
 
-  app2:
-    build: ./server
-    depends_on:
-      - redis
+  # app2:
+  #   build: ./server
+  #   depends_on:
+  #     - redis
 
+  # app3:
+  #   build: ./server
+  #   depends_on:
+  #     - redis
+
+  # app4:
+  #   build: ./server
+  #   depends_on:
+  #     - redis
+      
   haproxy:
     build: ./haproxy
     ports:
       - 8080:8080
     depends_on:
       - app1
-      - app2
+      # - app2
+      # - app3
+      # - app4

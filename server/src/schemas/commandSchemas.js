@@ -5,7 +5,8 @@ const commandSchemas = {
   play: Joi.object({
     command: Joi.string()
       .pattern(/play/)
-      .required()
+      .required(),
+
   }),
 
   pause: Joi.object({
@@ -13,7 +14,8 @@ const commandSchemas = {
       .pattern(/pause/)
       .required(),
 
-    offset: Joi.number().required()
+    offset: Joi.number().required(),
+
   }),
 
   seekTo: Joi.object({
@@ -21,7 +23,8 @@ const commandSchemas = {
       .pattern(/seekTo/)
       .required(),
 
-    offset: Joi.number().required()
+    offset: Joi.number().required(),
+
   }),
 
   requestState: Joi.object({
